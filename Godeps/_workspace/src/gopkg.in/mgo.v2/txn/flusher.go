@@ -3,8 +3,8 @@ package txn
 import (
 	"fmt"
 
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2"
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 )
 
 func flush(r *Runner, t *transaction) error {

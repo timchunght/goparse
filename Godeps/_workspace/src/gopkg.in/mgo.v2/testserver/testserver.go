@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"gopkg.in/tomb.v2"
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2"
 )
 
 // WARNING: This package was replaced by mgo.v2/dbtest.

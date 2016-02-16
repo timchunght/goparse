@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"modernplanit/Godeps/_workspace/src/github.com/gorilla/mux"
+	"goparse/Godeps/_workspace/src/github.com/gorilla/mux"
 	"net/http"
 	// "modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"goparse/helpers"

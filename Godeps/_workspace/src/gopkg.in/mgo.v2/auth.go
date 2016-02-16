@@ -34,8 +34,8 @@ import (
 	"fmt"
 	"sync"
 
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/internal/scram"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/internal/scram"
 )
 
 type authCmd struct {

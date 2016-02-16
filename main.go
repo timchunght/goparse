@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"goparse/connection"
+	"log"
 	"net/http"
 	"os"
 )

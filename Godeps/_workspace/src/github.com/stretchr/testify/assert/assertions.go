@@ -14,8 +14,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"modernplanit/Godeps/_workspace/src/github.com/davecgh/go-spew/spew"
-	"modernplanit/Godeps/_workspace/src/github.com/pmezard/go-difflib/difflib"
+	"goparse/Godeps/_workspace/src/github.com/davecgh/go-spew/spew"
+	"goparse/Godeps/_workspace/src/github.com/pmezard/go-difflib/difflib"
 )
 
 // TestingT is an interface wrapper around *testing.T

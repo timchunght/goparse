@@ -14,8 +14,8 @@ import (
 	"strings"
 	"sync"
 
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2"
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 
 	crand "crypto/rand"
 	mrand "math/rand"

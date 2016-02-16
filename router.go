@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"modernplanit/Godeps/_workspace/src/github.com/gorilla/mux"
+	"goparse/Godeps/_workspace/src/github.com/gorilla/mux"
 )
 
 func NewRouter() *mux.Router {

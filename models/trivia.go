@@ -1,7 +1,7 @@
 package models
 
 import (
-	"modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"time"
 )
 

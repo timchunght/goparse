@@ -11,7 +11,7 @@ import (
 	"path"
 	"regexp"
 
-	"modernplanit/Godeps/_workspace/src/github.com/gorilla/context"
+	"goparse/Godeps/_workspace/src/github.com/gorilla/context"
 )
 
 // NewRouter returns a new router instance.
