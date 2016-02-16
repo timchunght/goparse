@@ -1,0 +1,20 @@
+haproxy:
+  image: tutum/haproxy
+  links:
+   - web
+  ports:
+   - '80:80'
+web:
+  build: .
+  command: 'bash -c ''/go/bin/modernplanit'''
+  working_dir: /go/src/modernplanit
+  environment:
+    PORT: 8080
+    MONGO_URL: 'mongo:27017/modernplanit_staging'
+  ports:
+    - '8080'
+  links:
+    - mongo
+mongo:
+  image: mongo:3.2
+

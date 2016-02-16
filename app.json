@@ -1,0 +1,8 @@
+{
+  "name": "Timlink",
+  "description": "API URL Shortener",
+  "image": "golang:latest",
+  "addons": [
+    "mongolab"
+  ]
+}
