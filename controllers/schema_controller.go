@@ -79,7 +79,7 @@ func SchemaQuery(w http.ResponseWriter, r *http.Request) {
 	result, err := models.SchemaQuery(bson.M{"_id": className})
 	if err != nil {
 		// If we encounter error parsing query params
-		err = helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
+		err = helpers.RenderJsonErr(w, http.StatusNotFound, 404, err.Error())
 		if err != nil {
 			panic(err)
 		}
@@ -99,7 +99,7 @@ func SchemaIndex(w http.ResponseWriter, r *http.Request) {
 	results, err := models.SchemaIndex()
 	if err != nil {
 		// If we encounter error parsing query params
-		err = helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
+		err = helpers.RenderJsonErr(w, http.StatusNotFound, 404, err.Error())
 		if err != nil {
 			panic(err)
 		}

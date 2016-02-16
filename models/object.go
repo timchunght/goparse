@@ -39,6 +39,13 @@ func FindObjectById(className, objectId string) (map[string]interface{}, error) 
 	if err != nil {
 		return object, errors.New("object not found for get")
 	}
+	object["objectId"] = object["_id"]
+
+	object["createdAt"] = object["_created_at"]
+	object["updatedAt"] = object["_updated_at"]
+	delete(object, "_id")
+	delete(object, "_created_at")
+	delete(object, "_updated_at")
 	// _ = "breakpoint"
 	return object, err
 }

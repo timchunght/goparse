@@ -7,9 +7,10 @@ import (
 	// "modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"goparse/helpers"
 	"goparse/models"
+	"regexp"
 	// "time"
 	// "io/ioutil"
-	// "fmt"
+	"fmt"
 	// "errors"
 )
 
@@ -55,10 +56,18 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 	className := string(vars["className"])
 	objectId := string(vars["objectId"])
 
+	if !classNameIsValid(className) {
+		err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.OBJECT_NOT_FOUND, fmt.Sprintf("Invalid classname: %s, classnames can only have alphanumeric characters and _, and must start with an alpha character ", className))
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
 	object, err := models.FindObjectById(className, objectId)
 	if err != nil {
 		// If we didn't find it, 404
-		err := helpers.RenderJsonErr(w, 103, err.Error())
+		err := helpers.RenderJsonErr(w, http.StatusNotFound, helpers.INVALID_CLASS_NAME, err.Error())
 		if err != nil {
 			panic(err)
 		}
@@ -71,6 +80,22 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+// This function makes sure that the className is valid for all ReadWrite requests
+func classNameIsValid(className string) bool {
+	//Class names have the same constraints as field names, but also allow the previous additional names.
+  return className == "_User" || className == "_Installation" || className == "_Session" || className == "_Role" || fieldNameIsValid(className)
+  // TODO: Implement joinClassRegex
+  // || joinClassRegex.test(className)
+    
+}
+
+// Makes sure that the fieldName is legal using the regex
+func fieldNameIsValid(fieldName string) bool {
+
+	re, _ := regexp.Compile(`^[A-Za-z][A-Za-z0-9_]*$`)
+	return re.Match([]byte(fieldName))
 }
 
 // func ObjectQuery(w http.ResponseWriter, r *http.Request) {
