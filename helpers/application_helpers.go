@@ -19,12 +19,12 @@ func RandomString(strlen int) string {
 
 type JsonErr struct {
 	Code int    `json:"code"`
-	Text string `json:"text"`
+	Err string `json:"err"`
 }
 
 //Wrapper function for RenderJson
-func RenderJsonErr(w http.ResponseWriter, statusCode int, text string) error {
-	return RenderJson(w, statusCode, JsonErr{Code: statusCode, Text: text})
+func RenderJsonErr(w http.ResponseWriter, statusCode int, err string) error {
+	return RenderJson(w, statusCode, JsonErr{Code: statusCode, Err: err})
 }
 
 func RenderJson(w http.ResponseWriter, statusCode int, object interface{}) error {

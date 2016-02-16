@@ -46,6 +46,12 @@ var routes = Routes{
 	// 	controllers.TriviaUpdate,
 	// },
 	Route{
+		"ObjectShow",
+		[]string{"GET"},
+		"/classes/{className}/{objectId}",
+		controllers.ObjectShow,
+	},
+	Route{
 		"SchemaIndex",
 		[]string{"GET"},
 		"/schemas",
