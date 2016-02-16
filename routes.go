@@ -15,34 +15,46 @@ type Route struct {
 type Routes []Route
 
 var routes = Routes{
+	// Route{
+	// 	"TriviaCreate",
+	// 	[]string{"POST"},
+	// 	"/trivias",
+	// 	controllers.TriviaCreate,
+	// },
+	// Route{
+	// 	"TriviaQuery",
+	// 	[]string{"GET"},
+	// 	"/trivias",
+	// 	controllers.TriviaQuery,
+	// },
+	// Route{
+	// 	"TriviaShow",
+	// 	[]string{"GET"},
+	// 	"/trivias/{id}",
+	// 	controllers.TriviaShow,
+	// },
+	// Route{
+	// 	"TriviaDestroy",
+	// 	[]string{"DELETE"},
+	// 	"/trivias/{id}",
+	// 	controllers.TriviaDestroy,
+	// },
+	// Route{
+	// 	"TriviaUpdate",
+	// 	[]string{"PUT"},
+	// 	"/trivias/{id}",
+	// 	controllers.TriviaUpdate,
+	// },
 	Route{
-		"TriviaCreate",
-		[]string{"POST"},
-		"/trivias",
-		controllers.TriviaCreate,
-	},
-	Route{
-		"TriviaQuery",
+		"SchemaIndex",
 		[]string{"GET"},
-		"/trivias",
-		controllers.TriviaQuery,
+		"/schemas",
+		controllers.SchemaIndex,
 	},
 	Route{
-		"TriviaShow",
+		"SchemaQuery",
 		[]string{"GET"},
-		"/trivias/{id}",
-		controllers.TriviaShow,
-	},
-	Route{
-		"TriviaDestroy",
-		[]string{"DELETE"},
-		"/trivias/{id}",
-		controllers.TriviaDestroy,
-	},
-	Route{
-		"TriviaUpdate",
-		[]string{"PUT"},
-		"/trivias/{id}",
-		controllers.TriviaUpdate,
+		"/schemas/{className}",
+		controllers.SchemaQuery,
 	},
 }
