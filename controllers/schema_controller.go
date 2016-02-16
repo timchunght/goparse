@@ -38,7 +38,7 @@ import (
 // 			return
 // 		}
 
-// 		if err := helpers.RenderJson(w, http.StatusCreated, trivia); err != nil {
+// 		if err := helpers.RenderJson(w, http.StatusCreated, trivia) err != nil {
 // 			panic(err)
 // 		}
 
@@ -55,7 +55,7 @@ import (
 // 	id := string(vars["id"])
 // 	trivia, err := models.Schema{}.Find(id)
 // 	if err != nil {
-// 		// If we didn't find it, 404
+// 		// If we didn"t find it, 404
 // 		err := helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
 // 		if err != nil {
 // 			panic(err)
@@ -120,7 +120,7 @@ func SchemaIndex(w http.ResponseWriter, r *http.Request) {
 // 	err := models.Schema{}.Destroy(id)
 
 // 	if err != nil {
-// 		// If we didn't find it, 404
+// 		// If we didn"t find it, 404
 // 		err := helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
 // 		if err != nil {
 // 			panic(err)
@@ -146,7 +146,7 @@ func SchemaIndex(w http.ResponseWriter, r *http.Request) {
 // 	requiredParamKeys := paramKeys
 // 	doc, err := getUpdateDocFromBody(body, requiredParamKeys, paramKeys)
 // 	if err != nil {
-// 		// If we didn't find it, 404
+// 		// If we didn"t find it, 404
 // 		err := helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
 
 // 		if err != nil {
@@ -171,3 +171,34 @@ func SchemaIndex(w http.ResponseWriter, r *http.Request) {
 // 	helpers.RenderJson(w, http.StatusOK, trivia)
 
 // }
+
+func MongoFieldTypeToSchemaAPIType(typeStr string) map[string]string {
+  if (string(typeStr[0]) == "*") {
+    return map[string]string{ "type": "Pointer", "targetClass": string(typeStr[1:len(typeStr)])}
+  }
+
+  if (string(typeStr[0:len("relation<")]) == "relation<") {
+  	return map[string]string{"type": "Relation", "targetClass": string(typeStr[len("relation<"):len(typeStr)])}
+  
+  }
+  switch typeStr {
+  case "number":   
+  	return map[string]string{"type": "Number"}
+  case "string":   
+  	return map[string]string{"type": "String"}
+  case "boolean":  
+  	return map[string]string{"type": "Boolean"}
+  case "date":     
+  	return map[string]string{"type": "Date"}
+  case "map":
+  case "object":   
+  	return map[string]string{"type": "Object"}
+  case "array":    
+  	return map[string]string{"type": "Array"}
+  case "geopoint": 
+  	return map[string]string{"type": "GeoPoint"}
+  case "file":     
+  	return map[string]string{"type": "File"}
+  }
+  return map[string]string{}
+}
