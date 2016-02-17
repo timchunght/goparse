@@ -82,6 +82,24 @@ var routes = Routes{
 		controllers.ObjectShow,
 	},
 	Route{
+		"ObjectDestroy",
+		[]string{"DELETE"},
+		"/classes/{className}/{objectId}",
+		controllers.ObjectDestroy,
+	},
+	Route{
+		"ObjectDestroy",
+		[]string{"DELETE"},
+		"/classes/{className}",
+		controllers.ObjectDestroy,
+	},
+	Route{
+		"ObjectDestroy",
+		[]string{"DELETE"},
+		"/classes/",
+		controllers.ObjectDestroy,
+	},
+	Route{
 		"SchemaIndex",
 		[]string{"GET"},
 		"/schemas",
