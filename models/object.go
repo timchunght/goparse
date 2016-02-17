@@ -38,14 +38,13 @@ func FindObjectById(objectId, className string) (map[string]interface{}, error) 
 	if err != nil {
 		return object, errors.New("object not found for get")
 	}
-	object["objectId"] = object["_id"]
-
-	object["createdAt"] = object["_created_at"]
-	object["updatedAt"] = object["_updated_at"]
-	delete(object, "_id")
-	delete(object, "_created_at")
-	delete(object, "_updated_at")
-	// _ = "breakpoint"
+	// retrieve schema map first
+	schema, err := SchemaQuery(bson.M{"_id": className})
+	if err != nil {
+		return object, err
+	}	
+	_ = parseObject(object, schema)
+				
 	return object, err
 }
 
