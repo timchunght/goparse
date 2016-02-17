@@ -28,7 +28,7 @@ func ObjectCreate(object map[string]interface{}, className string) error {
 	return err
 }
 
-func FindObjectById(className, objectId string) (map[string]interface{}, error) {
+func FindObjectById(objectId, className string) (map[string]interface{}, error) {
 
 	c, session := connection.GetCollection(className)
 	defer session.Close()
@@ -49,6 +49,16 @@ func FindObjectById(className, objectId string) (map[string]interface{}, error) 
 	return object, err
 }
 
+func ObjectUpdate(objectUpdates bson.M, objectId, className string) error {
+	
+	doc := bson.M{"$set": objectUpdates}
+	c, session := connection.GetCollection(className)
+	defer session.Close()
+	query := bson.M{"_id": objectId}
+	err := c.Update(query, doc)
+	return err
+	
+}
 // func SchemaQuery(query bson.M) (map[string]interface{}, error) {
 
 // 	c, session := connection.GetCollection("_SCHEMA")

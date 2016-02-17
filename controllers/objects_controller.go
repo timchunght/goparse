@@ -187,7 +187,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		// if schemaUpdates is larger than 0, then we will update schema
 		// TODO: Implement Schema Update
 		if len(schemaUpdates) > 0 {
-			err := models.SchemaUpdate(className, schemaUpdates)
+			err := models.SchemaUpdate(schemaUpdates, className)
 			if err != nil {
 				panic(err)
 				return
@@ -292,6 +292,223 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	// }
 }
 
+func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
+	// fmt.Println(r.Method)
+	vars := mux.Vars(r)
+	className := string(vars["className"])
+	objectId := string(vars["objectId"])
+	// Return error if the className is not valid
+	if !classNameIsValid(className) {
+		err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.OBJECT_NOT_FOUND, fmt.Sprintf("Invalid classname: %s, classnames can only have alphanumeric characters and _, and must start with an alpha character ", className))
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	// parse body and return error if json -> map conversion returns error
+	body, _ := ioutil.ReadAll(r.Body)
+	// parseReqBodyParams ensures that all fields are valid (err equals nil)
+	params, err := parseReqBodyParams(body)
+	if err != nil {
+
+		if err.Error() == "invalid JSON" {
+			err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INVALID_JSON, err.Error())
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INVALID_KEY_NAME, err.Error())
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		return
+	}
+	// if it reaches this stage, it means that both the className and fieldNames are legal
+	object := map[string]interface{}{}
+	classExists := true
+	schema, err := models.SchemaQuery(bson.M{"_id": className})
+	if err != nil {
+		if err.Error() == "not found" {
+
+			classExists = false
+		} else {
+			panic(err)
+			return
+		}
+	}
+
+	// LEGAL TYPES:
+	// Boolean
+	// String
+	// Number
+	// Date
+	// Object
+	// Array
+	// GeoPoint
+	// ------ TO BE IMPLEMENTED
+	// File
+	// Pointer
+	// Relation
+	if classExists {
+		schemaUpdates := bson.M{}
+		// This block of code assumes that we have the schema object for the collection
+		// TODOS: implement the scenario in which the schema for the collection does not exist
+		for fieldName, value := range params {
+
+			// if field exists in schema
+			if expectedFieldType, ok := schema[fieldName]; ok {
+				// We want to make sure that value type matches the type in the schema collection
+				switch v := value.(type) {
+				default:
+					fieldType := "unidentified type"
+					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+					return
+				case bool:
+					fieldType := "boolean"
+					if expectedFieldType == fieldType {
+						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
+					}
+				case string:
+					fieldType := "string"
+					if expectedFieldType == fieldType {
+						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
+					}
+				case int, int32, int64, float32, float64:
+					fieldType := "number"
+					if expectedFieldType == fieldType {
+						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
+					}
+				case map[string]interface{}:
+					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint,
+					fieldType, err := getFieldTypeFromMap(v)
+					// if the fieldType is not a legal type, return error
+					if err != nil {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+						return
+					}
+
+					// if the fieldType is a legalType but does not match the type in the schema, return error
+					if expectedFieldType == fieldType {
+						// TODOs:
+						// IMPLEMENT THE VARIOUS TYPES "Date", "GeoPoint"
+						switch fieldType {
+						default:
+							object[fieldName] = v
+						case "geopoint":
+							object[fieldName] = v
+						case "date":
+							v, err := parseDate(v)
+							if err != nil {
+								helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+								return
+							}
+							object[fieldName] = v
+						}
+						
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
+					}
+				case []interface{}:
+					fieldType := "array"
+					if expectedFieldType == fieldType {
+						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
+					}
+				case nil:
+					object[fieldName] = v
+				}
+			} else {
+
+				switch v := value.(type) {
+				default:
+					fieldType := "unidentified type"
+					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type: %s", fieldType))
+					return
+				case bool:
+					object[fieldName] = v
+					schemaUpdates[fieldName] = "boolean"
+				case string:
+					object[fieldName] = v
+					schemaUpdates[fieldName] = "string"
+				case int, int32, int64, float32, float64:
+					object[fieldName] = v
+					schemaUpdates[fieldName] = "number"
+				case map[string]interface{}:
+					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint,
+					fieldType, err := getFieldTypeFromMap(v)
+					if err != nil {
+						_ = helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+						return
+					}
+
+					switch fieldType {
+					default:
+						object[fieldName] = v
+					case "geopoint":
+						object[fieldName] = v
+					case "date":
+						v, err := parseDate(v)
+						if err != nil {
+							helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+							return
+						}
+						object[fieldName] = v
+					}
+					schemaUpdates[fieldName] = fieldType
+				case []interface{}:
+					object[fieldName] = v
+					schemaUpdates[fieldName] = "array"
+				case nil:
+					object[fieldName] = v
+				}
+			}
+
+		}
+		fmt.Println(object)
+
+		// if schemaUpdates is larger than 0, then we will update schema
+		// TODO: Implement Schema Update
+		if len(schemaUpdates) > 0 {
+			err := models.SchemaUpdate(schemaUpdates, className)
+			if err != nil {
+				panic(err)
+				return
+			}
+		}
+	} else {
+
+		_ = helpers.RenderJsonErr(w, http.StatusNotFound, helpers.OBJECT_NOT_FOUND, "object not found for update")
+		return
+	}
+
+	// try to update object and return error if not successful
+	object["_updated_at"] = time.Now()
+	err = models.ObjectUpdate(object, objectId, className)
+	if err != nil {
+		_ = helpers.RenderJsonErr(w, http.StatusNotFound, helpers.OBJECT_NOT_FOUND, "object not found for update")
+		return
+	}
+
+	helpers.RenderJson(w, http.StatusOK, map[string]interface{}{"updatedAt": object["_updated_at"]})
+	return
+
+}
+
 func ObjectShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	className := string(vars["className"])
@@ -305,7 +522,7 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	object, err := models.FindObjectById(className, objectId)
+	object, err := models.FindObjectById(objectId, className)
 	if err != nil {
 		// If we didn't find it, 404
 		err := helpers.RenderJsonErr(w, http.StatusNotFound, helpers.INVALID_CLASS_NAME, err.Error())

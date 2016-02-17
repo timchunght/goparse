@@ -115,7 +115,7 @@ func metadata() map[string]interface{} {
 // 	return c.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
 // }
 
-func SchemaUpdate(className string, schemaUpdates bson.M) error {
+func SchemaUpdate(schemaUpdates bson.M, className string) error {
 	
 	doc := bson.M{"$set": schemaUpdates}
 	c, session := connection.GetCollection("_SCHEMA")
