@@ -4,7 +4,7 @@ import (
 	// "encoding/json"
 	"goparse/Godeps/_workspace/src/github.com/gorilla/mux"
 	"net/http"
-	// "modernplanit/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
+	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"goparse/helpers"
 	"goparse/models"
 	"regexp"
@@ -16,6 +16,17 @@ import (
 
 func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	
+	vars := mux.Vars(r)
+	className := string(vars["className"])
+
+	if !classNameIsValid(className) {
+		err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.OBJECT_NOT_FOUND, fmt.Sprintf("Invalid classname: %s, classnames can only have alphanumeric characters and _, and must start with an alpha character ", className))
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
 	body, _ := ioutil.ReadAll(r.Body)
 	_, err := parseReqBodyParams(body)
 	if err != nil {
@@ -35,6 +46,8 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+
+	_, _ = models.SchemaQuery(bson.M{"_id": className})
 	// _, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
 	// if paramsPresent == true {
 
