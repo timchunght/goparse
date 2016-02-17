@@ -5,26 +5,25 @@ import (
 	"encoding/json"
 	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"goparse/connection"
-	// "log"
-	"fmt"
+	"log"
+	// "fmt"
 	// "time"
 )
 
 func SchemaCreate(schema map[string]interface{}, className string) error {
 
-	// c, session := connection.GetCollection("_SCHEMA")
-	// defer session.Close()
+	c, session := connection.GetCollection("_SCHEMA")
+	defer session.Close()
 	schema["_id"] = className
 	schema["_metadata"] = metadata()
-	// err := c.Insert(schema)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// 	return err
+	err := c.Insert(schema)
+	if err != nil {
+		log.Fatal(err)
+		return err
 
-	// }
-	// return err
-	fmt.Println(schema)
-	return nil
+	}
+	return err
+	
 }
 
 // func (object Schema) Find(id string) (Schema, error) {
@@ -104,8 +103,8 @@ func metadata() map[string]interface{} {
     "writeUserFields": []
     }
   }`)
-	err := json.Unmarshal(b, &metadata)
-	fmt.Println(err)
+	_ = json.Unmarshal(b, &metadata)
+	// fmt.Println(err)
 	return metadata
 }
 
@@ -116,20 +115,16 @@ func metadata() map[string]interface{} {
 // 	return c.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
 // }
 
-// func (object Schema) Update(id string, doc bson.M) (Schema, error) {
-// 	if bson.IsObjectIdHex(id) {
-// 		c, session := connection.GetCollection("_SCHEMA")
-// 		defer session.Close()
-// 		query := bson.M{"_id": bson.ObjectIdHex(id)}
-// 		doc["$set"].(bson.M)["updated_at"] = time.Now()
-// 		err := c.Update(query, doc)
-// 		// Upon successful update, we retrive the updated object
-// 		// from db and return it. WARNING: this is an additional query
-// 		if err == nil {
-// 			return Schema{}.Find(id)
-// 		} else {
-// 			return Schema{}, err
-// 		}
-// 	}
-// 	return Schema{}, errors.New("Invalid id")
-// }
+func SchemaUpdate(className string, schemaUpdates bson.M) error {
+	
+	doc := bson.M{"$set": schemaUpdates}
+	c, session := connection.GetCollection("_SCHEMA")
+	defer session.Close()
+	query := bson.M{"_id": className}
+	err := c.Update(query, doc)
+	return err
+	// Upon successful update, we retrive the updated object
+	// from db and return it. WARNING: this is an additional query
+	
+	
+}

@@ -80,14 +80,13 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	// Pointer
 	// Relation
 	if classExists {
-		schemaUpdate := bson.M{}
+		schemaUpdates := bson.M{}
 		// This block of code assumes that we have the schema object for the collection
 		// TODOS: implement the scenario in which the schema for the collection does not exist
 		for fieldName, value := range params {
 
 			// if field exists in schema
 			if expectedFieldType, ok := schema[fieldName]; ok {
-
 				// We want to make sure that value type matches the type in the schema collection
 				switch v := value.(type) {
 				default:
@@ -159,13 +158,13 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					return
 				case bool:
 					object[fieldName] = v
-					schemaUpdate[fieldName] = "boolean"
+					schemaUpdates[fieldName] = "boolean"
 				case string:
 					object[fieldName] = v
-					schemaUpdate[fieldName] = "string"
+					schemaUpdates[fieldName] = "string"
 				case int, int32, int64, float32, float64:
 					object[fieldName] = v
-					schemaUpdate[fieldName] = "number"
+					schemaUpdates[fieldName] = "number"
 				case map[string]interface{}:
 					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint,
 					fieldType, err := getFieldTypeFromMap(v)
@@ -174,10 +173,10 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					object[fieldName] = v
-					schemaUpdate[fieldName] = fieldType
+					schemaUpdates[fieldName] = fieldType
 				case []interface{}:
 					object[fieldName] = v
-					schemaUpdate[fieldName] = "array"
+					schemaUpdates[fieldName] = "array"
 				case nil:
 					object[fieldName] = v
 				}
@@ -186,10 +185,14 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println(object)
 
-		// if schemaUpdate is larger than 0, then we will update schema
+		// if schemaUpdates is larger than 0, then we will update schema
 		// TODO: Implement Schema Update
-		if len(schemaUpdate) > 0 {
-			fmt.Println(schemaUpdate)
+		if len(schemaUpdates) > 0 {
+			err := models.SchemaUpdate(className, schemaUpdates)
+			if err != nil {
+				panic(err)
+				return
+			}
 		}
 	} else {
 
@@ -239,11 +242,22 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		models.SchemaCreate(schema, className)
-		fmt.Println(schema)
+		err := models.SchemaCreate(schema, className)
+		if err != nil {
+			panic(err)
+		}
+		
 	}
 
-	_ = helpers.RenderJson(w, http.StatusOK, schema)
+	err = models.ObjectCreate(object, className)
+
+	if err != nil {
+		panic(err)
+	}
+	helpers.RenderJson(w, http.StatusOK, map[string]interface{}{"createdAt": object["_created_at"], "objectId": object["_id"]})
+	return
+
+	// _ = helpers.RenderJson(w, http.StatusOK, schema)
 
 	// _, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
 	// if paramsPresent == true {
