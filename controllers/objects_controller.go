@@ -9,47 +9,65 @@ import (
 	"goparse/models"
 	"regexp"
 	// "time"
-	// "io/ioutil"
+	"io/ioutil"
 	"fmt"
 	// "errors"
 )
 
-// func ObjectCreate(w http.ResponseWriter, r *http.Request) {
+func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	
-// 	body, _ := ioutil.ReadAll(r.Body)
-// 	_, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
-// 	if paramsPresent == true {
+	body, _ := ioutil.ReadAll(r.Body)
+	_, err := parseReqBodyParams(body)
+	if err != nil {
 
-// 		err := json.Unmarshal(body, &trivia)
-// 		if err != nil {
-// 			err := helpers.RenderJsonErr(w, http.StatusBadRequest, "Error parsing params")
-// 			if err != nil {
-// 				panic(err)
-// 			}
-// 			return
-// 		}
+		if err.Error() == "invalid JSON" {
+			err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INVALID_JSON, err.Error())
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INVALID_KEY_NAME, err.Error())
+			if err != nil {
+				panic(err)
+			}
+		}
+		
+		return
 
-// 		// make sure the create method does not have error
-// 		err = (&trivia).Create()
-// 		if err != nil {
-// 			err := helpers.RenderJsonErr(w, http.StatusInternalServerError, "Error creating object")
-// 			if err != nil {
-// 				panic(err)
-// 			}
-// 			return
-// 		}
+	}
+	// _, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
+	// if paramsPresent == true {
 
-// 		if err := helpers.RenderJson(w, http.StatusCreated, trivia); err != nil {
-// 			panic(err)
-// 		}
+	// 	err := json.Unmarshal(body, &trivia)
+	// 	if err != nil {
+	// 		err := helpers.RenderJsonErr(w, http.StatusBadRequest, "Error parsing params")
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 		return
+	// 	}
 
-// 	} else {
-// 		err := helpers.RenderJsonErr(w, http.StatusBadRequest, "Required params not found")
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	}
-// }
+	// 	// make sure the create method does not have error
+	// 	err = (&trivia).Create()
+	// 	if err != nil {
+	// 		err := helpers.RenderJsonErr(w, http.StatusInternalServerError, "Error creating object")
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 		return
+	// 	}
+
+	// 	if err := helpers.RenderJson(w, http.StatusCreated, trivia); err != nil {
+	// 		panic(err)
+	// 	}
+
+	// } else {
+	// 	err := helpers.RenderJsonErr(w, http.StatusBadRequest, "Required params not found")
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
+}
 
 func ObjectShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

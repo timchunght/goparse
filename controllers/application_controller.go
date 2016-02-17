@@ -2,10 +2,12 @@ package controllers
 
 import (
 	// "fmt"
+
 	"encoding/json"
 	"errors"
 	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"net/http"
+	"fmt"
 )
 
 func getQuery(paramKeys []string, r *http.Request) (bson.M, error) {
@@ -80,7 +82,7 @@ func getUpdateDocFromBody(body []byte, requiredParamKeys, paramKeys []string) (b
 }
 
 // this function makes sure that all the params are present and their values not blank
-func requiredBodyParamsCheck(body []byte, paramsList []string) (map[string]interface{}, bool) {
+func parseReqBodyParams(body []byte) (map[string]interface{}, error) {
 
 	var params map[string]interface{}
 
@@ -89,34 +91,16 @@ func requiredBodyParamsCheck(body []byte, paramsList []string) (map[string]inter
 	// fmt.Println(params)
 	if err != nil {
 		// fmt.Println(err)
-		return params, false
-	} else {
-
-		for _, paramKey := range paramsList {
-
-			// check if the key is present
-			if value, ok := params[paramKey]; ok {
-				// _ = "breakpoint"
-				switch v := value.(type) {
-				default:
-				case string:
-					if v == "" {
-						// return false if the value is blank
-						return params, false
-					}
-				case []string:
-					if len(v) == 0 {
-						return params, false
-					}
-				}
-
-			} else {
-				// return false if the key does not exist
-				return params, false
-			}
-		}
-
+		return params, errors.New("invalid JSON")
 	}
 
-	return params, true
+
+	for key, _ := range params {
+		if(!fieldNameIsValid(key)) {
+			return params, errors.New(fmt.Sprintf("invalid field name: %s", key))
+		}
+  }
+	
+
+	return params, nil
 }

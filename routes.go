@@ -46,6 +46,12 @@ var routes = Routes{
 	// 	controllers.TriviaUpdate,
 	// },
 	Route{
+		"ObjectCreate",
+		[]string{"POST"},
+		"/classes/{className}",
+		controllers.ObjectCreate,
+	},
+	Route{
 		"ObjectShow",
 		[]string{"GET"},
 		"/classes/{className}/{objectId}",
