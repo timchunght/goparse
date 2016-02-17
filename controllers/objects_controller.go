@@ -19,6 +19,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	className := string(vars["className"])
 
+	// Return error if the className is not valid
 	if !classNameIsValid(className) {
 		err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.OBJECT_NOT_FOUND, fmt.Sprintf("Invalid classname: %s, classnames can only have alphanumeric characters and _, and must start with an alpha character ", className))
 		if err != nil {
@@ -27,8 +28,10 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// parse body and return error if json -> map conversion returns error
 	body, _ := ioutil.ReadAll(r.Body)
-	_, err := parseReqBodyParams(body)
+	// parseReqBodyParams ensures that all fields are valid (err equals nil)
+	params, err := parseReqBodyParams(body)
 	if err != nil {
 
 		if err.Error() == "invalid JSON" {
@@ -47,7 +50,86 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	_, _ = models.SchemaQuery(bson.M{"_id": className})
+
+	
+	// if it reaches this stage, it means that both the className and fieldNames are legal
+	object := map[string]interface{}{}
+	schema, err := models.SchemaQuery(bson.M{"_id": className})
+	classExists := true
+	if err != nil {
+		if err.Error() == "not found" {
+
+			classExists = false
+		} else {
+			panic(err)
+			return
+		}
+	}
+
+	
+	if classExists {
+		schemaUpdate := bson.M{}
+		// This block of code assumes that we have the schema object for the collection
+		// TODOS: implement the scenario in which the schema for the collection does not exist
+		for fieldName, value := range params {
+			
+			// if field exists in schema
+			if expectedFieldType, ok := schema[fieldName]; ok {
+
+				// We want to make sure that value type matches the type in the schema collection
+				switch v := value.(type) {
+				default:
+					// TODO:
+					// RETURN UNIDENTIFIED JSON ERR
+					fmt.Println("unidentified")
+					fmt.Println(v)
+				case string:
+					if expectedFieldType == "string" {
+						object[fieldName] = v
+					}
+				case []interface{}:
+					if expectedFieldType == "array" {
+						object[fieldName] = v
+					}
+				case int, int32, int64, float32, float64:
+					if expectedFieldType == "number" {
+						object[fieldName] = v
+					}
+				}
+			} else {
+				
+
+				switch v := value.(type) {
+				default:
+					// TODOs: return json error
+					fmt.Println("unidentified")
+					fmt.Println(v)
+				case string:
+					object[fieldName] = v
+					schemaUpdate[fieldName] = "string"
+				case []interface{}:
+					object[fieldName] = v
+					schemaUpdate[fieldName] = "array"
+				case int, int32, int64, float32, float64:
+					object[fieldName] = v
+					schemaUpdate[fieldName] = "number"
+				}
+			}
+			
+	  }
+	  fmt.Println(object)
+	  
+	  // if schemaUpdate is larger than 0, then we will update schema
+	  if len(schemaUpdate) > 0 {
+	  	fmt.Println(schemaUpdate)
+	  }
+	}
+  
+
+	_ = helpers.RenderJson(w, http.StatusOK, schema)
+	
+
+
 	// _, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
 	// if paramsPresent == true {
 
