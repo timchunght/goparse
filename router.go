@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"goparse/Godeps/_workspace/src/github.com/gorilla/mux"
 	"bytes"
-	// "fmt"
+	"fmt"
 )
 
 // TODOs: add middleware
@@ -41,6 +41,8 @@ func NewRouter() *mux.Router {
 func allowMethodOverride(next http.Handler) (http.Handler) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     body, _ := ioutil.ReadAll(r.Body)
+    fmt.Println(string(body))
+    fmt.Println(r)
     var params map[string]interface{}
     // fmt.Println(string(body))
 		_ = json.Unmarshal(body, &params)

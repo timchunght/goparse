@@ -32,7 +32,6 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 
 	// parse body and return error if json -> map conversion returns error
 	body, _ := ioutil.ReadAll(r.Body)
-	fmt.Println(string(body))
 	// parseReqBodyParams ensures that all fields are valid (err equals nil)
 	params, err := parseReqBodyParams(body)
 	if err != nil {
