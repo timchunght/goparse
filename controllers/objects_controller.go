@@ -17,10 +17,13 @@ import (
 )
 
 func ObjectCreate(w http.ResponseWriter, r *http.Request) {
-	// fmt.Println(r.Method)
+	fmt.Println("I AM INSIDE CREATE")
 	vars := mux.Vars(r)
 	className := string(vars["className"])
-
+	if string(vars["objectId"]) != "" {
+		helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "Cannot create a specific object id"})
+		return
+	}
 	// Return error if the className is not valid
 	if !classNameIsValid(className) {
 		err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.OBJECT_NOT_FOUND, fmt.Sprintf("Invalid classname: %s, classnames can only have alphanumeric characters and _, and must start with an alpha character ", className))
@@ -485,7 +488,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// still need to write parser to match special fields
+// still need to write parser to match special fields: Object, GeoPoint, Date
 func ObjectShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	className := string(vars["className"])

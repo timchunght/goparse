@@ -48,6 +48,18 @@ var routes = Routes{
 	Route{
 		"ObjectCreate",
 		[]string{"POST"},
+		"/classes/{className}/",
+		controllers.ObjectCreate,
+	},
+	Route{
+		"ObjectCreate",
+		[]string{"POST"},
+		"/classes/{className}/{objectId}",
+		controllers.ObjectCreate,
+	},
+	Route{
+		"ObjectCreate",
+		[]string{"POST"},
 		"/classes/{className}",
 		controllers.ObjectCreate,
 	},
