@@ -327,7 +327,8 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 		default:
 			return "", errors.New(fmt.Sprintf("invalid type: %s", fieldType))
 		case "Date":
-			if fieldType, ok := fieldValue["iso"]; ok {
+			if _, ok := fieldValue["iso"]; ok {
+				// fmt.Println(fieldType)
 				return strings.ToLower(fieldType.(string)), nil
 			} else {
 				return "", errors.New(fmt.Sprintf("Invalid date: %v", fieldValue))
@@ -335,8 +336,13 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 		case "GeoPoint":
 			// if the fieldType is GeoPoint and latitude exists, return no error
 			// else return an error that corresponds with code 111
-			if fieldType, ok := fieldValue["latitude"]; ok {
-				return strings.ToLower(fieldType.(string)), nil
+			if _, ok := fieldValue["latitude"]; ok {
+				if _, ok := fieldValue["longitude"]; ok {
+					// fmt.Println(fieldType)
+					return strings.ToLower(fieldType.(string)), nil
+				} else {
+					return "", errors.New("Invalid format for longitude")
+				}
 			} else {
 				return "", errors.New("Invalid format for latitude")
 			}
