@@ -157,6 +157,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 
+				// when fieldName does not exist in current schema
 				switch v := value.(type) {
 				default:
 					fieldType := "unidentified type"
@@ -190,6 +191,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					object[fieldName] = v
 					schemaUpdates[fieldName] = "array"
 				case nil:
+					// when we get null, save it regardless, just don't record it in the schema
 					object[fieldName] = v
 				}
 			}
@@ -247,6 +249,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				object[fieldName] = v
 				schema[fieldName] = "array"
 			case nil:
+				object[fieldName] = v
 				// do nothing when it is nil, this is a placeholder case to prevent error
 			}
 		}
@@ -521,10 +524,13 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func ObjectQuery(w http.ResponseWriter, r *http.Request) {
-
-	body, _ := ioutil.ReadAll(r.Body)
-	fmt.Println(r)
-	fmt.Println(string(body))
+	vars := mux.Vars(r)
+	className := string(vars["className"])
+	objects, _ := models.QueryObject(map[string]interface{}{}, className)
+	// body, _ := ioutil.ReadAll(r.Body)
+	// fmt.Println(r)
+	// fmt.Println(string(body))
+	_ = helpers.RenderJson(w, http.StatusOK, objects)
 	return
 }
 
@@ -573,7 +579,11 @@ func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, 
 	default:
 		object[fieldName] = fieldValue
 	case "geopoint":
-		object[fieldName] = fieldValue
+		geoPoint, err := parseGeoPoint(fieldValue)
+		object[fieldName] = geoPoint
+		if err != nil {
+			return map[string]interface{}{"code": helpers.INCORRECT_TYPE, "error": err.Error()}
+		}
 	case "date":
 		dateObject, err := parseDate(fieldValue)
 		if err != nil {
@@ -638,10 +648,35 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 // parse GeoPoint map and makes sure that latitude is "Latitude must be in [-90, 90]: 123213.0"
 // "Longitude must be in [-180, 180): 213213.2" (code 111)
 // It also makes sure that the values are numbers (if they are not numbers, code 107)
-// func parseGeoPoint(geoPoint map[string]interface{}) ([]float64, error) {
-
-// 	return
-// }
+func parseGeoPoint(geoPoint map[string]interface{}) ([]interface{}, error) {
+	
+	values := make([]interface{}, 2, 2)
+	for _, key := range []string{"latitude", "longitude"} {
+		switch geoPoint[key].(type) {
+		default:
+			return values, errors.New(fmt.Sprintf("Wrong format code 107: TODO: %v", geoPoint[key]))
+		case int, int32, int64, float32, float64:
+			value := geoPoint[key].(float64)
+			switch key{
+			case "latitude":
+				if float64(value) <= float64(90) && float64(value) >= float64(-90) {
+					// we want the original item when storing the point
+					values[0] = geoPoint[key]
+				} else {
+					return values, errors.New(fmt.Sprintf("Latitude must be in [-90, 90]: %v", geoPoint[key]))
+				}	
+			case "longitude":
+				if float64(value) < float64(180) && float64(value) >= float64(-180) {
+				// we want the original item when storing the point
+					values[1] = geoPoint[key]
+				} else {
+					return values, errors.New(fmt.Sprintf("Longitude must be in [-180, 180): %v", geoPoint[key]))
+				}
+			}
+		}
+	}
+	return values, nil
+}
 
 // parse Date map and makes sure that iso is a string and it is parsable (code 107 if not)
 // "error": "invalid date: '2011-11-07T20:58:34.448Zs'" code 107

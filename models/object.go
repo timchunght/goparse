@@ -68,6 +68,61 @@ func ObjectDestroy(objectId, className string) error {
 }
 
 
+func QueryObject(query bson.M, className string) ([]map[string]interface{}, error) {
+
+	c, session := connection.GetCollection(className)
+	defer session.Close()
+	var objects []map[string]interface{}
+
+	err := c.Find(query).All(&objects)
+	if err != nil {
+		return objects, errors.New("object not found for get")
+	}
+
+	// retrieve schema map first
+	schema, err := SchemaQuery(bson.M{"_id": className})
+	if err != nil {
+		return objects, err
+	}
+
+	if len(objects) > 0 {
+		for _, object := range objects {
+			_ = parseObject(object, schema)
+				
+		} 
+	
+	}
+
+	return objects, err
+}
+
+// parseObject assumes a good map
+func parseObject(object, schema map[string]interface{}) error {
+	object["objectId"] = object["_id"]
+	object["createdAt"] = object["_created_at"]
+	object["updatedAt"] = object["_updated_at"]
+	delete(object, "_id")
+	delete(object, "_created_at")
+	delete(object, "_updated_at")
+	
+	for key, value := range object {
+		switch schema[key] {
+		default:
+			// do nothing
+		case "date":
+			if object[key] != nil {
+				object[key] = map[string]interface{}{"__type": "Date", "iso": value}
+			}
+		case "geopoint":
+			if object[key] != nil {
+				object[key] = map[string]interface{}{"__type": "GeoPoint", "latitude": value.([]interface{})[0], "longitude": value.([]interface{})[1]}
+			}
+		}
+	}
+
+	return nil
+
+}
 // func SchemaQuery(query bson.M) (map[string]interface{}, error) {
 
 // 	c, session := connection.GetCollection("_SCHEMA")
@@ -81,40 +136,6 @@ func ObjectDestroy(objectId, className string) error {
 // 	}
 
 // 	return result, err
-// }
-
-// func SchemaIndex() ([]interface{}, error) {
-
-// 	c, session := connection.GetCollection("_SCHEMA")
-// 	defer session.Close()
-// 	var results []interface{}
-// 	err := c.Find(bson.M{}).All(&results)
-// 	// _ = "breakpoint"
-// 	if err != nil {
-// 		// Return empty object and err if there is an error
-// 		return results, err
-// 	}
-
-// 	return results, err
-// }
-
-
-// func (object Schema) Update(id string, doc bson.M) (Schema, error) {
-// 	if bson.IsObjectIdHex(id) {
-// 		c, session := connection.GetCollection("_SCHEMA")
-// 		defer session.Close()
-// 		query := bson.M{"_id": bson.ObjectIdHex(id)}
-// 		doc["$set"].(bson.M)["updated_at"] = time.Now()
-// 		err := c.Update(query, doc)
-// 		// Upon successful update, we retrive the updated object
-// 		// from db and return it. WARNING: this is an additional query
-// 		if err == nil {
-// 			return Schema{}.Find(id)
-// 		} else {
-// 			return Schema{}, err
-// 		}
-// 	}
-// 	return Schema{}, errors.New("Invalid id")
 // }
 
 func RandomString(strlen int) string {

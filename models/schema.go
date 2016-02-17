@@ -23,7 +23,7 @@ func SchemaCreate(schema map[string]interface{}, className string) error {
 
 	}
 	return err
-	
+
 }
 
 // func (object Schema) Find(id string) (Schema, error) {
@@ -116,7 +116,7 @@ func metadata() map[string]interface{} {
 // }
 
 func SchemaUpdate(schemaUpdates bson.M, className string) error {
-	
+
 	doc := bson.M{"$set": schemaUpdates}
 	c, session := connection.GetCollection("_SCHEMA")
 	defer session.Close()
@@ -125,6 +125,5 @@ func SchemaUpdate(schemaUpdates bson.M, className string) error {
 	return err
 	// Upon successful update, we retrive the updated object
 	// from db and return it. WARNING: this is an additional query
-	
-	
+
 }
