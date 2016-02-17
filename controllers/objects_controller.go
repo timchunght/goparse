@@ -75,8 +75,8 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	// Date
 	// Object
 	// Array
-	// ------ TO BE IMPLEMENTED
 	// GeoPoint
+	// ------ TO BE IMPLEMENTED
 	// File
 	// Pointer
 	// Relation
@@ -352,6 +352,26 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 	return "object", nil
 	
 }
+
+// parse GeoPoint map and makes sure that latitude is "Latitude must be in [-90, 90]: 123213.0"
+// "Longitude must be in [-180, 180): 213213.2" (code 111)
+// It also makes sure that the values are numbers (if they are not numbers, code 107)
+// func parseGeoPoint(geoPoint map[string]interface{}) ([]float64, error) {
+
+// 	return 
+// }
+
+// parse Date map and makes sure that iso is a string and it is parsable (code 107 if not)
+// "error": "invalid date: '2011-11-07T20:58:34.448Zs'" code 107
+// sample dateStr: 2011-11-07T20:58:34.448Z
+// myTime, err := time.Parse(time.RFC3339, "2015-03-13T22:05:08Z")
+// func parseDate(date map[string]interface{}) (time.Time(), error) {
+
+// 	return 
+// }
+
+
+// ------------------------------LEGACY CODE------------------------------
 // func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 
 // 	query, err := getQuery([]string{"event_id"}, r)
