@@ -1,11 +1,11 @@
 # GoParse
-	
+    
 ### Development:
 
 Make sure to use the mongo database that you want to connect to, it will default to ``localhost:27017`` if no ``MONGO_URL`` environment variable exists
 
-	go get github.com/codegangsta/gin
-	MONGO_URL=mongodb://localhost:27017/parse_sample_db gin -p 5000
+    go get github.com/codegangsta/gin
+    MONGO_URL=mongodb://localhost:27017/parse_sample_db gin -p 5000
 
 This above will run the application at port 5000
 
@@ -13,11 +13,11 @@ This above will run the application at port 5000
 
 If you wish the build the application in the traditional "go way",
 
-	go build
+    go build
 
 To run the binary file, run:
 
-	export PORT=8080 && ./goparse
+    export PORT=8080 && ./goparse
 
 You can change the port to the one your prefer since the application reads from ``PORT`` environment variable
 
@@ -685,8 +685,8 @@ We are currently using ``godep`` to manage dependencies. All dependencies are tr
 
 For example, I have a package in the same project named ``connection`` and my old project name is ``tim``, I will have to reference ``connection`` pacakge in my ``main.go`` as ``tim/connection``. Now the directory name is ``timothy`` and I will have to change it to ``timothy/connection`` and then run the following,
 
-	godep save -r ./...
-		
+    godep save -r ./...
+        
 ``godep`` is not smart enough yet to distinguish whether the package belongs to the same project or is an external dependency.
 
 Go Debugging
@@ -696,25 +696,25 @@ If you have used Rails, you will miss using binding.pry. However, Go does have s
 
 Install Godebug by running:
 
-	go get github.com/mailgun/godebug
+    go get github.com/mailgun/godebug
 
 Insert a breakpoint anywhere in a source file you want to debug:
-	
-	_ = "breakpoint"
+    
+    _ = "breakpoint"
 
 Replace ``<pkgs>`` with the packages we will be debugging if it is not the ``main`` package
 
-	godebug build -instrument <pkgs>
+    godebug build -instrument <pkgs>
 
 For example:
-	
-	godebug build -instrument goparse/connection
+    
+    godebug build -instrument goparse/connection
 
 godebug will generate a binary named ``yourprojectname.debug``, run that binary with the necessary arguments or environment variables and use it as you would binding.pry
 
 For example,
 
-	PORT=8080 ./goparse.debug
+    PORT=8080 ./goparse.debug
 
 ### Dealing with Mongodb
 
@@ -722,13 +722,13 @@ Enter the console by typing ``mongo`` in terminal
 
 The following command allows you to rename field/column
 
-	db.events.update({},{ $rename: { 'current_field_name': 'new_name'}}, { multi: true })
+    db.events.update({},{ $rename: { 'current_field_name': 'new_name'}}, { multi: true })
 
 ### Testing
 
 Run 
-	
-	go test -v ./...
+    
+    go test -v ./...
 
 -----
 
