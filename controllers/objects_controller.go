@@ -30,9 +30,10 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// parse body and return error if json -> map conversion returns error
+	// parse body into []byte
 	body, _ := ioutil.ReadAll(r.Body)
 	// parseReqBodyParams ensures that all fields are valid (err equals nil)
+	// and return error if json -> map conversion returns error
 	params, err := parseReqBodyParams(body)
 	if err != nil {
 
@@ -49,7 +50,6 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		return
-
 	}
 
 	// if it reaches this stage, it means that both the className and fieldNames are legal
@@ -89,16 +89,14 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				// We want to make sure that value type matches the type in the schema collection
 				switch v := value.(type) {
 				default:
-					// TODO:
-					// RETURN UNIDENTIFIED JSON ERR
-					// fmt.Println("unidentified")
-					// fmt.Println(v)
-
 					fieldType := "unidentified type"
 					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
 					return
 				case bool:
 					fieldType := "boolean"
+					// if expectedFieldType and actual fieldType are the same, we will est the object map's value using the fieldName 
+					// else return error
+					// same logic in bool, string, number, and array
 					if expectedFieldType == fieldType {
 						object[fieldName] = v
 					} else {
@@ -132,7 +130,13 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 
 					// if the fieldType is a legalType but does not match the type in the schema, return error
 					if expectedFieldType == fieldType {
-						object[fieldName] = v
+						// this function sets the various special fieldType fields in the object
+						// types: Object, Date, GeoPoint
+						errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+						if errHash != nil {
+							helpers.RenderJson(w, http.StatusBadRequest, errHash)
+							return
+						}
 					} else {
 						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
 						return
@@ -171,7 +175,13 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
 						return
 					}
-					object[fieldName] = v
+					// this function sets the various special fieldType fields in the object
+					// types: Object, Date, GeoPoint
+					errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+					if errHash != nil {
+						helpers.RenderJson(w, http.StatusBadRequest, errHash)
+						return
+					}
 					schemaUpdates[fieldName] = fieldType
 				case []interface{}:
 					object[fieldName] = v
@@ -195,6 +205,8 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 
+		// this block of code executes when the schema for the className does not exist
+		// again, className and all fieldNames can be assumed legal
 		schema = map[string]interface{}{}
 		for fieldName, value := range params {
 
@@ -219,77 +231,43 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
 					return
 				}
-				switch fieldType {
-				default:
-					object[fieldName] = v
-				case "geopoint":
-				case "date":
-					v, err := parseDate(v)
-					if err != nil {
-						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
-						return
-					}
-					object[fieldName] = v
+				// this function sets the various special fieldType fields in the object
+				// types: Object, Date, GeoPoint
+				errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+				if errHash != nil {
+					helpers.RenderJson(w, http.StatusBadRequest, errHash)
+					return
 				}
-
 				schema[fieldName] = fieldType
 
 			case []interface{}:
 				object[fieldName] = v
 				schema[fieldName] = "array"
 			case nil:
+				// do nothing when it is nil, this is a placeholder case to prevent error
 			}
 		}
 
 		err := models.SchemaCreate(schema, className)
+		// there is nothing we can do if the schema fails to create when it passes all checks
+		// TODOs: implement a failsafe for this
 		if err != nil {
 			panic(err)
+			return
 		}
 		
 	}
 
+	// we can only panic and return if the model fails to create
+	// TODOs: implement a failsafe for this
 	err = models.ObjectCreate(object, className)
-
 	if err != nil {
 		panic(err)
 	}
+	// by now, the _created_at and _id fields should have been updated. All go maps are passed by reference
 	helpers.RenderJson(w, http.StatusOK, map[string]interface{}{"createdAt": object["_created_at"], "objectId": object["_id"]})
 	return
 
-	// _ = helpers.RenderJson(w, http.StatusOK, schema)
-
-	// _, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
-	// if paramsPresent == true {
-
-	// 	err := json.Unmarshal(body, &trivia)
-	// 	if err != nil {
-	// 		err := helpers.RenderJsonErr(w, http.StatusBadRequest, "Error parsing params")
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
-	// 		return
-	// 	}
-
-	// 	// make sure the create method does not have error
-	// 	err = (&trivia).Create()
-	// 	if err != nil {
-	// 		err := helpers.RenderJsonErr(w, http.StatusInternalServerError, "Error creating object")
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
-	// 		return
-	// 	}
-
-	// 	if err := helpers.RenderJson(w, http.StatusCreated, trivia); err != nil {
-	// 		panic(err)
-	// 	}
-
-	// } else {
-	// 	err := helpers.RenderJsonErr(w, http.StatusBadRequest, "Required params not found")
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// }
 }
 
 func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
@@ -401,20 +379,12 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 
 					// if the fieldType is a legalType but does not match the type in the schema, return error
 					if expectedFieldType == fieldType {
-						// TODOs:
-						// IMPLEMENT THE VARIOUS TYPES "Date", "GeoPoint"
-						switch fieldType {
-						default:
-							object[fieldName] = v
-						case "geopoint":
-							object[fieldName] = v
-						case "date":
-							v, err := parseDate(v)
-							if err != nil {
-								helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
-								return
-							}
-							object[fieldName] = v
+						// this function sets the various special fieldType fields in the object
+						// types: Object, Date, GeoPoint
+						errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+						if errHash != nil {
+							helpers.RenderJson(w, http.StatusBadRequest, errHash)
+							return
 						}
 						
 					} else {
@@ -456,18 +426,12 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					switch fieldType {
-					default:
-						object[fieldName] = v
-					case "geopoint":
-						object[fieldName] = v
-					case "date":
-						v, err := parseDate(v)
-						if err != nil {
-							helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
-							return
-						}
-						object[fieldName] = v
+					// this function sets the various special fieldType fields in the object
+					// types: Object, Date, GeoPoint
+					errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+					if errHash != nil {
+						helpers.RenderJson(w, http.StatusBadRequest, errHash)
+						return
 					}
 					schemaUpdates[fieldName] = fieldType
 				case []interface{}:
@@ -479,8 +443,6 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
-		fmt.Println(object)
-
 		// if schemaUpdates is larger than 0, then we will update schema
 		// TODO: Implement Schema Update
 		if len(schemaUpdates) > 0 {
@@ -496,7 +458,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// try to update object and return error if not successful
+	// try to update object; return error if not successful
 	object["_updated_at"] = time.Now()
 	err = models.ObjectUpdate(object, objectId, className)
 	if err != nil {
@@ -546,6 +508,23 @@ func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r)
 	fmt.Println(string(body))
 	return
+}
+
+// this function handles the special fieldTypes: Object, GeoPoint, Date (Pointer and Relation to be considered)
+func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, fieldValue map[string]interface{}, fieldType string) map[string]interface{} {
+	switch fieldType {
+	default:
+		object[fieldName] = fieldValue
+	case "geopoint":
+		object[fieldName] = fieldValue
+	case "date":
+		dateObject, err := parseDate(fieldValue)
+		if err != nil {
+			return map[string]interface{}{"code": helpers.INCORRECT_TYPE, "error": err.Error()}
+		}
+		object[fieldName] = dateObject
+	}
+	return nil
 }
 
 // This function makes sure that the className is valid for all ReadWrite requests
