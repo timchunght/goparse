@@ -271,10 +271,23 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
-	// fmt.Println(r.Method)
 	vars := mux.Vars(r)
 	className := string(vars["className"])
 	objectId := string(vars["objectId"])
+
+	if className == "" {
+	err := helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "missing class name"})
+		if err != nil {
+			panic(err)
+		}
+		return
+	} else if objectId == "" {
+		err := helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "Cannot update without a specific object id"})
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
 	// Return error if the className is not valid
 	if !classNameIsValid(className) {
 		err := helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.OBJECT_NOT_FOUND, fmt.Sprintf("Invalid classname: %s, classnames can only have alphanumeric characters and _, and must start with an alpha character ", className))
@@ -426,6 +439,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
+					// key checking sequence "__type", "__op"
 					// this function sets the various special fieldType fields in the object
 					// types: Object, Date, GeoPoint
 					errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
@@ -471,6 +485,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// still need to write parser to match special fields
 func ObjectShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	className := string(vars["className"])
@@ -509,6 +524,45 @@ func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(string(body))
 	return
 }
+
+func ObjectDestroy(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	className := string(vars["className"])
+	objectId := string(vars["objectId"])
+	if className == "" {
+		err := helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "missing class name"})
+		if err != nil {
+			panic(err)
+		}
+		return
+	} else if objectId == "" {
+		err := helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "Cannot delete without a specific object id"})
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	err := models.ObjectDestroy(objectId, className)
+
+	if err != nil {
+		// If we didn't find it, 404
+		err := helpers.RenderJsonErr(w, http.StatusNotFound, helpers.OBJECT_NOT_FOUND, "object not found for delete")
+		if err != nil {
+			panic(err)
+		}
+
+		return
+	}
+
+	// If the destroy action has no error, return the success message
+	err = helpers.RenderJson(w, http.StatusOK, map[string]string{})
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 
 // this function handles the special fieldTypes: Object, GeoPoint, Date (Pointer and Relation to be considered)
 func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, fieldValue map[string]interface{}, fieldType string) map[string]interface{} {
@@ -638,60 +692,3 @@ func parseDate(date map[string]interface{}) (time.Time, error) {
 
 // }
 
-// func ObjectDestroy(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	id := string(vars["id"])
-// 	err := models.Object{}.Destroy(id)
-
-// 	if err != nil {
-// 		// If we didn't find it, 404
-// 		err := helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
-// 		if err != nil {
-// 			panic(err)
-// 		}
-
-// 		return
-// 	}
-
-// 	// If the destroy action has no error, return the success message
-// 	err = helpers.RenderJson(w, http.StatusOK, map[string]string{"message": "Successfully deleted"})
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// }
-
-// func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	id := string(vars["id"])
-// 	body, _ := ioutil.ReadAll(r.Body)
-
-// 	paramKeys := []string{"event_id", "name", "description"}
-// 	requiredParamKeys := paramKeys
-// 	doc, err := getUpdateDocFromBody(body, requiredParamKeys, paramKeys)
-// 	if err != nil {
-// 		// If we didn't find it, 404
-// 		err := helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
-
-// 		if err != nil {
-// 			panic(err)
-// 		}
-
-// 		return
-// 	}
-
-// 	trivia, err := models.Object{}.Update(id, doc)
-
-// 	if err != nil {
-
-// 		err := helpers.RenderJsonErr(w, http.StatusNotFound, err.Error())
-
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		return
-// 	}
-
-// 	helpers.RenderJson(w, http.StatusOK, trivia)
-
-// }

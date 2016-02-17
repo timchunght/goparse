@@ -59,6 +59,15 @@ func ObjectUpdate(objectUpdates bson.M, objectId, className string) error {
 	return err
 	
 }
+
+func ObjectDestroy(objectId, className string) error {
+
+	c, session := connection.GetCollection(className)
+	defer session.Close()
+	return c.Remove(bson.M{"_id": objectId})
+}
+
+
 // func SchemaQuery(query bson.M) (map[string]interface{}, error) {
 
 // 	c, session := connection.GetCollection("_SCHEMA")
@@ -88,12 +97,7 @@ func ObjectUpdate(objectUpdates bson.M, objectId, className string) error {
 
 // 	return results, err
 // }
-// func (object Schema) Destroy(id string) error {
 
-// 	c, session := connection.GetCollection("_SCHEMA")
-// 	defer session.Close()
-// 	return c.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
-// }
 
 // func (object Schema) Update(id string, doc bson.M) (Schema, error) {
 // 	if bson.IsObjectIdHex(id) {

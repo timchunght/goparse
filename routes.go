@@ -58,6 +58,18 @@ var routes = Routes{
 		controllers.ObjectUpdate,
 	},
 	Route{
+		"ObjectUpdate",
+		[]string{"PUT"},
+		"/classes/{className}",
+		controllers.ObjectUpdate,
+	},
+	Route{
+		"ObjectUpdate",
+		[]string{"PUT"},
+		"/classes/",
+		controllers.ObjectUpdate,
+	},
+	Route{
 		"ObjectQuery",
 		[]string{"GET"},
 		"/classes/{className}",
