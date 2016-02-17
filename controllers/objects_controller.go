@@ -66,7 +66,18 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	
+	// LEGAL TYPES:
+	// Boolean
+	// String
+	// Number
+	// Date
+	// Object
+	// Array
+	// ------ TO BE IMPLEMENTED
+	// GeoPoint
+	// File
+	// Pointer
+	// Relation
 	if classExists {
 		schemaUpdate := bson.M{}
 		// This block of code assumes that we have the schema object for the collection
@@ -83,16 +94,24 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					// RETURN UNIDENTIFIED JSON ERR
 					fmt.Println("unidentified")
 					fmt.Println(v)
+				case bool:
+					if expectedFieldType == "boolean" {
+						object[fieldName] = v
+					}
 				case string:
 					if expectedFieldType == "string" {
 						object[fieldName] = v
 					}
-				case []interface{}:
-					if expectedFieldType == "array" {
-						object[fieldName] = v
-					}
 				case int, int32, int64, float32, float64:
 					if expectedFieldType == "number" {
+						object[fieldName] = v
+					}
+				case map[string]interface{}:
+					if expectedFieldType == "object" {
+						object[fieldName] = v
+					}
+				case []interface{}:
+					if expectedFieldType == "array" {
 						object[fieldName] = v
 					}
 				}
@@ -104,15 +123,21 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					// TODOs: return json error
 					fmt.Println("unidentified")
 					fmt.Println(v)
+				case bool:
+					object[fieldName] = v
+					schemaUpdate[fieldName] = "boolean"
 				case string:
 					object[fieldName] = v
 					schemaUpdate[fieldName] = "string"
-				case []interface{}:
-					object[fieldName] = v
-					schemaUpdate[fieldName] = "array"
 				case int, int32, int64, float32, float64:
 					object[fieldName] = v
 					schemaUpdate[fieldName] = "number"
+				case map[string]interface{}:
+					object[fieldName] = v
+					schemaUpdate[fieldName] = "object"
+				case []interface{}:
+					object[fieldName] = v
+					schemaUpdate[fieldName] = "array"
 				}
 			}
 			
