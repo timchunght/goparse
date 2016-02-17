@@ -99,6 +99,10 @@ func parseReqBodyParams(body []byte) (map[string]interface{}, error) {
 		if(!fieldNameIsValid(key)) {
 			return params, errors.New(fmt.Sprintf("invalid field name: %s", key))
 		}
+
+		if key == "updatedAt" || key == "createdAt" || key == "objectId" {
+			return params, errors.New(fmt.Sprintf("%s is an invalid field name", key))
+		}
   }
 	
 

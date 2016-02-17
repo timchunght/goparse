@@ -34,7 +34,7 @@ func FindObjectById(className, objectId string) (map[string]interface{}, error) 
 	c, session := connection.GetCollection(className)
 	defer session.Close()
 	object := map[string]interface{}{}
-	
+
 	err := c.Find(bson.M{"_id": objectId}).One(&object)
 	if err != nil {
 		return object, errors.New("object not found for get")
@@ -64,7 +64,6 @@ func FindObjectById(className, objectId string) (map[string]interface{}, error) 
 
 // 	return result, err
 // }
-
 
 // func SchemaIndex() ([]interface{}, error) {
 

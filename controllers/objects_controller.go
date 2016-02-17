@@ -2,17 +2,17 @@ package controllers
 
 import (
 	// "encoding/json"
+	"errors"
+	"fmt"
 	"goparse/Godeps/_workspace/src/github.com/gorilla/mux"
-	"net/http"
 	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"goparse/helpers"
 	"goparse/models"
-	"regexp"
-	// "time"
 	"io/ioutil"
-	"fmt"
-	"errors"
+	"net/http"
+	"regexp"
 	"strings"
+	"time"
 	// "reflect"
 )
 
@@ -48,13 +48,11 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 		}
-		
+
 		return
 
 	}
 
-
-	
 	// if it reaches this stage, it means that both the className and fieldNames are legal
 	object := map[string]interface{}{}
 	schema, err := models.SchemaQuery(bson.M{"_id": className})
@@ -86,7 +84,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		// This block of code assumes that we have the schema object for the collection
 		// TODOS: implement the scenario in which the schema for the collection does not exist
 		for fieldName, value := range params {
-			
+
 			// if field exists in schema
 			if expectedFieldType, ok := schema[fieldName]; ok {
 
@@ -126,7 +124,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 				case map[string]interface{}:
-					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint, 
+					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint,
 					fieldType, err := getFieldTypeFromMap(v)
 					// if the fieldType is not a legal type, return error
 					if err != nil {
@@ -135,7 +133,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					}
 
 					// if the fieldType is a legalType but does not match the type in the schema, return error
-					if expectedFieldType ==  fieldType {
+					if expectedFieldType == fieldType {
 						object[fieldName] = v
 					} else {
 						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
@@ -153,7 +151,6 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					object[fieldName] = v
 				}
 			} else {
-				
 
 				switch v := value.(type) {
 				default:
@@ -170,7 +167,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					object[fieldName] = v
 					schemaUpdate[fieldName] = "number"
 				case map[string]interface{}:
-					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint, 
+					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint,
 					fieldType, err := getFieldTypeFromMap(v)
 					if err != nil {
 						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
@@ -185,19 +182,20 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					object[fieldName] = v
 				}
 			}
-			
-	  }
-	  fmt.Println(object)
-	  
-	  // if schemaUpdate is larger than 0, then we will update schema
-	  if len(schemaUpdate) > 0 {
-	  	fmt.Println(schemaUpdate)
-	  }
+
+		}
+		fmt.Println(object)
+
+		// if schemaUpdate is larger than 0, then we will update schema
+		// TODO: Implement Schema Update
+		if len(schemaUpdate) > 0 {
+			fmt.Println(schemaUpdate)
+		}
 	} else {
 
 		schema = map[string]interface{}{}
 		for fieldName, value := range params {
-				
+
 			switch v := value.(type) {
 			default:
 				fieldType := "unidentified type"
@@ -213,30 +211,39 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				object[fieldName] = v
 				schema[fieldName] = "number"
 			case map[string]interface{}:
-				// TODOS: this can be either a Object, Date ("__type"), or GeoPoint, 
+				// TODOS: this can be either a Object, Date ("__type"), or GeoPoint,
 				fieldType, err := getFieldTypeFromMap(v)
 				if err != nil {
 					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
 					return
 				}
-				object[fieldName] = v
+				switch fieldType {
+				default:
+					object[fieldName] = v
+				case "geopoint":
+				case "date":
+					v, err := parseDate(v)
+					if err != nil {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+						return
+					}
+					object[fieldName] = v
+				}
+
 				schema[fieldName] = fieldType
+
 			case []interface{}:
 				object[fieldName] = v
 				schema[fieldName] = "array"
 			case nil:
-			}	
-	  }
+			}
+		}
 
-	  fmt.Println(schema)
-
-
+		models.SchemaCreate(schema, className)
+		fmt.Println(schema)
 	}
-  
 
 	_ = helpers.RenderJson(w, http.StatusOK, schema)
-	
-
 
 	// _, paramsPresent := requiredBodyParamsCheck(body, []string{"event_id", "name", "description"})
 	// if paramsPresent == true {
@@ -308,15 +315,16 @@ func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	fmt.Println(r)
 	fmt.Println(string(body))
-	return 
+	return
 }
+
 // This function makes sure that the className is valid for all ReadWrite requests
 func classNameIsValid(className string) bool {
 	//Class names have the same constraints as field names, but also allow the previous additional names.
-  return className == "_User" || className == "_Installation" || className == "_Session" || className == "_Role" || fieldNameIsValid(className)
-  // TODO: Implement joinClassRegex
-  // || joinClassRegex.test(className)
-    
+	return className == "_User" || className == "_Installation" || className == "_Session" || className == "_Role" || fieldNameIsValid(className)
+	// TODO: Implement joinClassRegex
+	// || joinClassRegex.test(className)
+
 }
 
 // Makes sure that the fieldName is legal using the regex
@@ -354,11 +362,11 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 			} else {
 				return "", errors.New("Invalid format for latitude")
 			}
-		}	
-	} 
+		}
+	}
 
 	return "object", nil
-	
+
 }
 
 // parse GeoPoint map and makes sure that latitude is "Latitude must be in [-90, 90]: 123213.0"
@@ -366,18 +374,27 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 // It also makes sure that the values are numbers (if they are not numbers, code 107)
 // func parseGeoPoint(geoPoint map[string]interface{}) ([]float64, error) {
 
-// 	return 
+// 	return
 // }
 
 // parse Date map and makes sure that iso is a string and it is parsable (code 107 if not)
 // "error": "invalid date: '2011-11-07T20:58:34.448Zs'" code 107
-// sample dateStr: 2011-11-07T20:58:34.448Z
+// sample date string: 2011-11-07T20:58:34.448Z
 // myTime, err := time.Parse(time.RFC3339, "2015-03-13T22:05:08Z")
-// func parseDate(date map[string]interface{}) (time.Time(), error) {
+func parseDate(date map[string]interface{}) (time.Time, error) {
+	switch dateString := date["iso"].(type) {
+	default:
+		return time.Time{}, errors.New("unexpected type of iso")
+	case string:
+		dateObject, err := time.Parse(time.RFC3339, dateString)
+		if err != nil {
+			return time.Time{}, errors.New(fmt.Sprintf("invalid date: '%s'", dateString))
+		}
 
-// 	return 
-// }
+		return dateObject, err
+	}
 
+}
 
 // ------------------------------LEGACY CODE------------------------------
 // func ObjectQuery(w http.ResponseWriter, r *http.Request) {
