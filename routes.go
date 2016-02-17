@@ -52,6 +52,12 @@ var routes = Routes{
 		controllers.ObjectCreate,
 	},
 	Route{
+		"ObjectQuery",
+		[]string{"GET"},
+		"/classes/{className}",
+		controllers.ObjectQuery,
+	},
+	Route{
 		"ObjectShow",
 		[]string{"GET"},
 		"/classes/{className}/{objectId}",

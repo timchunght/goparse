@@ -23,6 +23,6 @@ func main() {
 func StartServer() {
 	connection.Connect()
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), allowMethodOverride(router)))
 
 }

@@ -17,7 +17,7 @@ import (
 )
 
 func ObjectCreate(w http.ResponseWriter, r *http.Request) {
-	
+	// fmt.Println(r.Method)
 	vars := mux.Vars(r)
 	className := string(vars["className"])
 
@@ -32,6 +32,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 
 	// parse body and return error if json -> map conversion returns error
 	body, _ := ioutil.ReadAll(r.Body)
+	fmt.Println(string(body))
 	// parseReqBodyParams ensures that all fields are valid (err equals nil)
 	params, err := parseReqBodyParams(body)
 	if err != nil {
@@ -302,6 +303,13 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func ObjectQuery(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	fmt.Println(r)
+	fmt.Println(string(body))
+	return 
+}
 // This function makes sure that the className is valid for all ReadWrite requests
 func classNameIsValid(className string) bool {
 	//Class names have the same constraints as field names, but also allow the previous additional names.
