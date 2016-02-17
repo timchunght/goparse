@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"fmt"
 	"errors"
+	"strings"
 	// "reflect"
 )
 
@@ -155,9 +156,9 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 
 				switch v := value.(type) {
 				default:
-					// TODOs: return json error
-					fmt.Println("unidentified")
-					fmt.Println(v)
+					fieldType := "unidentified type"
+					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type: %s", fieldType))
+					return
 				case bool:
 					object[fieldName] = v
 					schemaUpdate[fieldName] = "boolean"
@@ -191,6 +192,44 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 	  if len(schemaUpdate) > 0 {
 	  	fmt.Println(schemaUpdate)
 	  }
+	} else {
+
+		schema = map[string]interface{}{}
+		for fieldName, value := range params {
+				
+			switch v := value.(type) {
+			default:
+				fieldType := "unidentified type"
+				helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type: %s", fieldType))
+				return
+			case bool:
+				object[fieldName] = v
+				schema[fieldName] = "boolean"
+			case string:
+				object[fieldName] = v
+				schema[fieldName] = "string"
+			case int, int32, int64, float32, float64:
+				object[fieldName] = v
+				schema[fieldName] = "number"
+			case map[string]interface{}:
+				// TODOS: this can be either a Object, Date ("__type"), or GeoPoint, 
+				fieldType, err := getFieldTypeFromMap(v)
+				if err != nil {
+					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+					return
+				}
+				object[fieldName] = v
+				schema[fieldName] = fieldType
+			case []interface{}:
+				object[fieldName] = v
+				schema[fieldName] = "array"
+			case nil:
+			}	
+	  }
+
+	  fmt.Println(schema)
+
+
 	}
   
 
@@ -283,14 +322,29 @@ func fieldNameIsValid(fieldName string) bool {
 func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 
 	if fieldType, ok := fieldValue["__type"]; ok {
-		if fieldType == "Date" || fieldType == "GeoPoint" {
-			return fieldType.(string), nil
-		} else {
+
+		switch fieldType {
+		default:
 			return "", errors.New(fmt.Sprintf("invalid type: %s", fieldType))
-		}
-	} else {
-		return "object", nil
-	}
+		case "Date":
+			if fieldType, ok := fieldValue["iso"]; ok {
+				return strings.ToLower(fieldType.(string)), nil
+			} else {
+				return "", errors.New(fmt.Sprintf("Invalid date: %v", fieldValue))
+			}
+		case "GeoPoint":
+			// if the fieldType is GeoPoint and latitude exists, return no error
+			// else return an error that corresponds with code 111
+			if fieldType, ok := fieldValue["latitude"]; ok {
+				return strings.ToLower(fieldType.(string)), nil
+			} else {
+				return "", errors.New("Invalid format for latitude")
+			}
+		}	
+	} 
+
+	return "object", nil
+	
 }
 // func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 
