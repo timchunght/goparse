@@ -20,7 +20,7 @@ func Connect() {
 	fmt.Println(url)
 	if url == "" {
 		log.Printf("Cannot Find MONGO_URL, setting it to mongodb://localhost:27017")
-		url = "mongodb://localhost:27017/modernplanit_parse_production"
+		url = "mongodb://localhost:27017"
 	}
 
 	Session, err = mgo.Dial(url)

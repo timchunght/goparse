@@ -1,9 +1,11 @@
-# Modernplanit
+# GoParse
 	
 ### Development:
 
+Make sure to use the mongo database that you want to connect to, it will default to ``localhost:27017`` if no ``MONGO_URL`` environment variable exists
+
 	go get github.com/codegangsta/gin
-	gin -p 5000
+	MONGO_URL=mongodb://localhost:27017/parse_sample_db gin -p 5000
 
 This above will run the application at port 5000
 
@@ -15,7 +17,7 @@ If you wish the build the application in the traditional "go way",
 
 To run the binary file, run:
 
-	export PORT=8080 && ./modernplanit
+	export PORT=8080 && ./goparse
 
 For the app to work correctly, please ensure you fill out the ``.env`` with the correct environment variable. It will use the following by default if no environment variable given.
 
@@ -81,7 +83,7 @@ godebug will generate a binary named ``yourprojectname.debug``, run that binary 
 
 For example,
 
-	PORT=8080 ./modernplanit.debug
+	PORT=8080 ./goparse.debug
 
 ### Dealing with Mongodb
 
@@ -326,11 +328,11 @@ Query (TO BE IMPLEMENTED) Foreign key is the only ``query_param`` accepted
 
 Run the Docker Image:
 
-	docker rm -f imageproxy && docker run --restart=always -p 80:8080 --name imageproxy -d timchunght/imageproxy -addr 0.0.0.0:8080 -cache /tmp/imageproxy -baseURL http://s3.amazonaws.com/modernplanit/
+	docker rm -f imageproxy && docker run --restart=always -p 80:8080 --name imageproxy -d timchunght/imageproxy -addr 0.0.0.0:8080 -cache /tmp/imageproxy -baseURL http://s3.amazonaws.com/goparse/
 
-Get photo (provide ``s3_file_id`` and it will be ``http://s3.amazonaws.com/modernplanit/``):
+Get photo (provide ``s3_file_id`` and it will be ``http://s3.amazonaws.com/goparse/``):
   
-  http://img.modernplanit.com/{{width}}x{{height}}/{{s3_file_id}}
+  http://img.goparse.com/{{width}}x{{height}}/{{s3_file_id}}
 
 ### Testing
 

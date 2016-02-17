@@ -11,7 +11,8 @@ import (
 	// "time"
 	"io/ioutil"
 	"fmt"
-	// "errors"
+	"errors"
+	// "reflect"
 )
 
 func ObjectCreate(w http.ResponseWriter, r *http.Request) {
@@ -92,28 +93,62 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				default:
 					// TODO:
 					// RETURN UNIDENTIFIED JSON ERR
-					fmt.Println("unidentified")
-					fmt.Println(v)
+					// fmt.Println("unidentified")
+					// fmt.Println(v)
+
+					fieldType := "unidentified type"
+					helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+					return
 				case bool:
-					if expectedFieldType == "boolean" {
+					fieldType := "boolean"
+					if expectedFieldType == fieldType {
 						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
 					}
 				case string:
-					if expectedFieldType == "string" {
+					fieldType := "string"
+					if expectedFieldType == fieldType {
 						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
 					}
 				case int, int32, int64, float32, float64:
-					if expectedFieldType == "number" {
+					fieldType := "number"
+					if expectedFieldType == fieldType {
 						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
 					}
 				case map[string]interface{}:
-					if expectedFieldType == "object" {
+					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint, 
+					fieldType, err := getFieldTypeFromMap(v)
+					// if the fieldType is not a legal type, return error
+					if err != nil {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+						return
+					}
+
+					// if the fieldType is a legalType but does not match the type in the schema, return error
+					if expectedFieldType ==  fieldType {
 						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
 					}
 				case []interface{}:
-					if expectedFieldType == "array" {
+					fieldType := "array"
+					if expectedFieldType == fieldType {
 						object[fieldName] = v
+					} else {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
+						return
 					}
+				case nil:
+					object[fieldName] = v
 				}
 			} else {
 				
@@ -133,11 +168,19 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					object[fieldName] = v
 					schemaUpdate[fieldName] = "number"
 				case map[string]interface{}:
+					// TODOS: this can be either a Object, Date ("__type"), or GeoPoint, 
+					fieldType, err := getFieldTypeFromMap(v)
+					if err != nil {
+						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
+						return
+					}
 					object[fieldName] = v
-					schemaUpdate[fieldName] = "object"
+					schemaUpdate[fieldName] = fieldType
 				case []interface{}:
 					object[fieldName] = v
 					schemaUpdate[fieldName] = "array"
+				case nil:
+					object[fieldName] = v
 				}
 			}
 			
@@ -236,6 +279,19 @@ func fieldNameIsValid(fieldName string) bool {
 	return re.Match([]byte(fieldName))
 }
 
+// This function returns the field type when the request contains a map
+func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
+
+	if fieldType, ok := fieldValue["__type"]; ok {
+		if fieldType == "Date" || fieldType == "GeoPoint" {
+			return fieldType.(string), nil
+		} else {
+			return "", errors.New(fmt.Sprintf("invalid type: %s", fieldType))
+		}
+	} else {
+		return "object", nil
+	}
+}
 // func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 
 // 	query, err := getQuery([]string{"event_id"}, r)

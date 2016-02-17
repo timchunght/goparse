@@ -6,11 +6,11 @@ haproxy:
    - '80:80'
 web:
   build: .
-  command: 'bash -c ''/go/bin/modernplanit'''
-  working_dir: /go/src/modernplanit
+  command: 'bash -c ''/go/bin/goparse'''
+  working_dir: /go/src/goparse
   environment:
     PORT: 8080
-    MONGO_URL: 'mongo:27017/modernplanit_staging'
+    MONGO_URL: 'mongo:27017/goparse_staging'
   ports:
     - '8080'
   links:
