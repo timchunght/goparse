@@ -173,14 +173,14 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
 	// if err != nil {
 	// 	return bson.M{}, err
 	// }
-
+	_ = formatObjectQuery(query)
 	
 	return query, nil
 }
 
 
 
-func formatObjectQuery(query bson.M) error {
+func formatObjectQuery(query bson.M) map[string]interface{} {
 	// paramKeyMapping := map[string]string{"objectId": "_id", "updatedAt": "_updated_at", "createdAt": "_created_at"}
 	// for exposedParamKey, dbParamKey := range paramKeyMapping {
 	// 	// we do not allow querying using param key format that we use in database (prefixed with "_")
@@ -192,7 +192,20 @@ func formatObjectQuery(query bson.M) error {
 	// 	}
 	// }
 
-	
+	for exposedParamKey, value := range query {
+		if(!fieldNameIsValid(exposedParamKey)) {
+			return map[string]interface{}{"code": 001, "error": fmt.Sprintf("invalid field name: %s", exposedParamKey)}
+		}
+
+		switch exposedParamKey {
+		case "objectId":
+			query["_id"] = value
+			delete(query, "objectId")
+		case "createdAt":
+
+		case "updatedAt":
+		}
+	}
 	return nil
 
 }
