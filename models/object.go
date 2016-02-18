@@ -68,7 +68,10 @@ func ObjectDestroy(objectId, className string) error {
 
 
 func QueryObject(query bson.M, className string) ([]map[string]interface{}, error) {
-
+	// must parse query to make sure that the special keys are converted
+	// "objectId" -> "_id"; "createdAt" -> "_created_at"; "updatedAt" -> "_updated_at"
+	// date might require more parsing into time.Time object
+	// other object querying are to be implemented
 	c, session := connection.GetCollection(className)
 	defer session.Close()
 	var objects []map[string]interface{}

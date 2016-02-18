@@ -524,33 +524,20 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func ObjectQuery(w http.ResponseWriter, r *http.Request) {
-
+	queries, err := parseUrlEncodedQueryParams(r.URL.RawQuery)
 	// check body first to see if queries are found
-	body, _ := ioutil.ReadAll(r.Body)
-	queries, err := parseBodyQueryParams(body)
-	fmt.Println(queries)
+	// body, _ := ioutil.ReadAll(r.Body)
+	// queries, err := parseBodyQueryParams(body)
+	// fmt.Println(queries)
 	if err != nil {
 		// print some errors here
 		return
 	}
-	// Second: check UrlEncodedQuery
-	// parseUrlEncodedQueryParams(r.URL.RawQuery)
-	// queries, _ := url.ParseQuery(r.URL.RawQuery)
-
-	// fmt.Println(queries["where"])
-	// fmt.Println(len(queries["where"]))
-	// fmt.Println(queries["limit"])
-	// fmt.Println(len(queries["limit"]))
-	// fmt.Println(queries["skip"])
-	// fmt.Println(len(queries["skip"]))
-	// fmt.Println(queries["keys"])
-	// fmt.Println(len(queries["keys"]))
-	// fmt.Println(queries["order"])
-	// fmt.Println(len(queries["order"]))
+	
 
 	vars := mux.Vars(r)
 	className := string(vars["className"])
-	objects, _ := models.QueryObject(map[string]interface{}{}, className)
+	objects, _ := models.QueryObject(queries, className)
 	// body, _ := ioutil.ReadAll(r.Body)
 	// fmt.Println(r)
 	// fmt.Println(string(body))

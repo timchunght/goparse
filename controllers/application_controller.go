@@ -2,7 +2,7 @@ package controllers
 
 import (
 	// "fmt"
-
+	"net/url"
 	"encoding/json"
 	"errors"
 	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
@@ -129,4 +129,50 @@ func parseBodyQueryParams(body []byte) (bson.M, error) {
 		}
 	}
 	return bson.M{}, nil
+}
+
+func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
+	
+	queriesMap, _ := url.ParseQuery(rawQuery)
+	var queries bson.M
+	for key, value := range queriesMap {
+		switch key {
+		default:
+		case "where":
+			if len(value) == 1 {
+				
+				err := json.Unmarshal([]byte(value[0]), &queries)
+				if err != nil {
+					return bson.M{}, err
+				}
+			} 
+		case "order":
+		case "limit":
+		case "skip":
+		case "keys":
+		case "include":
+		}
+	}
+
+	fmt.Println(queries)
+	// fmt.Println(queries["where"])
+	// fmt.Println(len(queries["where"]))
+	// fmt.Println(queries["limit"])
+	// fmt.Println(len(queries["limit"]))
+	// fmt.Println(queries["skip"])
+	// fmt.Println(len(queries["skip"]))
+	// fmt.Println(queries["keys"])
+	// fmt.Println(len(queries["keys"]))
+	// fmt.Println(queries["order"])
+	// fmt.Println(len(queries["order"]))
+
+	// var params map[string]interface{}
+
+	// err := json.Unmarshal(body, &params)
+	// if err != nil {
+	// 	return bson.M{}, err
+	// }
+
+	
+	return queries, nil
 }
