@@ -136,9 +136,9 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					if expectedFieldType == fieldType {
 						// this function sets the various special fieldType fields in the object
 						// types: Object, Date, GeoPoint
-						errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
-						if errHash != nil {
-							helpers.RenderJson(w, http.StatusBadRequest, errHash)
+						errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+						if errMap != nil {
+							helpers.RenderJson(w, http.StatusBadRequest, errMap)
 							return
 						}
 					} else {
@@ -182,9 +182,9 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					}
 					// this function sets the various special fieldType fields in the object
 					// types: Object, Date, GeoPoint
-					errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
-					if errHash != nil {
-						helpers.RenderJson(w, http.StatusBadRequest, errHash)
+					errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+					if errMap != nil {
+						helpers.RenderJson(w, http.StatusBadRequest, errMap)
 						return
 					}
 					schemaUpdates[fieldName] = fieldType
@@ -238,9 +238,9 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				}
 				// this function sets the various special fieldType fields in the object
 				// types: Object, Date, GeoPoint
-				errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
-				if errHash != nil {
-					helpers.RenderJson(w, http.StatusBadRequest, errHash)
+				errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+				if errMap != nil {
+					helpers.RenderJson(w, http.StatusBadRequest, errMap)
 					return
 				}
 				schema[fieldName] = fieldType
@@ -400,9 +400,9 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 					if expectedFieldType == fieldType {
 						// this function sets the various special fieldType fields in the object
 						// types: Object, Date, GeoPoint
-						errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
-						if errHash != nil {
-							helpers.RenderJson(w, http.StatusBadRequest, errHash)
+						errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+						if errMap != nil {
+							helpers.RenderJson(w, http.StatusBadRequest, errMap)
 							return
 						}
 
@@ -448,9 +448,9 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 					// key checking sequence "__type", "__op"
 					// this function sets the various special fieldType fields in the object
 					// types: Object, Date, GeoPoint
-					errHash := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
-					if errHash != nil {
-						helpers.RenderJson(w, http.StatusBadRequest, errHash)
+					errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+					if errMap != nil {
+						helpers.RenderJson(w, http.StatusBadRequest, errMap)
 						return
 					}
 					schemaUpdates[fieldName] = fieldType
@@ -524,12 +524,13 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func ObjectQuery(w http.ResponseWriter, r *http.Request) {
-	queries, err := parseUrlEncodedQueryParams(r.URL.RawQuery)
+	queries, errMap := parseUrlEncodedQueryParams(r.URL.RawQuery)
 	// check body first to see if queries are found
 	// body, _ := ioutil.ReadAll(r.Body)
 	// queries, err := parseBodyQueryParams(body)
 	// fmt.Println(queries)
-	if err != nil {
+	if errMap != nil {
+		helpers.RenderJson(w, http.StatusBadRequest, errMap)
 		// print some errors here
 		return
 	}

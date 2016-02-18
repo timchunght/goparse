@@ -131,7 +131,7 @@ func parseBodyQueryParams(body []byte) (bson.M, error) {
 	return bson.M{}, nil
 }
 
-func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
+func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}) {
 	
 	queryMap, _ := url.ParseQuery(rawQuery)
 	var query bson.M
@@ -143,7 +143,7 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
 				
 				err := json.Unmarshal([]byte(value[0]), &query)
 				if err != nil {
-					return bson.M{}, err
+					return bson.M{}, map[string]interface{}{"code": 105, "error": err.Error()}
 				}
 
 			} 
@@ -173,37 +173,36 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
 	// if err != nil {
 	// 	return bson.M{}, err
 	// }
-	_ = formatObjectQuery(query)
-	
-	return query, nil
+	errMap := formatObjectQuery(query)
+	return query, errMap
 }
 
 
 
 func formatObjectQuery(query bson.M) map[string]interface{} {
-	// paramKeyMapping := map[string]string{"objectId": "_id", "updatedAt": "_updated_at", "createdAt": "_created_at"}
-	// for exposedParamKey, dbParamKey := range paramKeyMapping {
-	// 	// we do not allow querying using param key format that we use in database (prefixed with "_")
-	// 	delete(query, dbParamKey)
+	
 
-	// 	if value, ok := query[exposedParamKey]; ok {
-	// 		query[dbParamKey] = value
-	// 		delete(query, exposedParamKey)
-	// 	}
-	// }
-
-	for exposedParamKey, value := range query {
+	for exposedParamKey, _ := range query {
 		if(!fieldNameIsValid(exposedParamKey)) {
 			return map[string]interface{}{"code": 001, "error": fmt.Sprintf("invalid field name: %s", exposedParamKey)}
 		}
 
-		switch exposedParamKey {
-		case "objectId":
-			query["_id"] = value
-			delete(query, "objectId")
-		case "createdAt":
+		// switch exposedParamKey {
+		// case "objectId":
+		// 	query["_id"] = value
+		// 	delete(query, "objectId")
+		// case "createdAt":
 
-		case "updatedAt":
+		// case "updatedAt":
+		// }
+	}
+
+	paramKeyMapping := map[string]string{"objectId": "_id", "updatedAt": "_updated_at", "createdAt": "_created_at"}
+	for exposedParamKey, dbParamKey := range paramKeyMapping {
+		// we do not allow querying using param key format that we use in database (prefixed with "_")
+		if value, ok := query[exposedParamKey]; ok {
+			query[dbParamKey] = value
+			delete(query, exposedParamKey)
 		}
 	}
 	return nil
