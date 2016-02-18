@@ -133,18 +133,19 @@ func parseBodyQueryParams(body []byte) (bson.M, error) {
 
 func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
 	
-	queriesMap, _ := url.ParseQuery(rawQuery)
-	var queries bson.M
-	for key, value := range queriesMap {
+	queryMap, _ := url.ParseQuery(rawQuery)
+	var query bson.M
+	for key, value := range queryMap {
 		switch key {
 		default:
 		case "where":
 			if len(value) == 1 {
 				
-				err := json.Unmarshal([]byte(value[0]), &queries)
+				err := json.Unmarshal([]byte(value[0]), &query)
 				if err != nil {
 					return bson.M{}, err
 				}
+
 			} 
 		case "order":
 		case "limit":
@@ -154,17 +155,17 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
 		}
 	}
 
-	fmt.Println(queries)
-	// fmt.Println(queries["where"])
-	// fmt.Println(len(queries["where"]))
-	// fmt.Println(queries["limit"])
-	// fmt.Println(len(queries["limit"]))
-	// fmt.Println(queries["skip"])
-	// fmt.Println(len(queries["skip"]))
-	// fmt.Println(queries["keys"])
-	// fmt.Println(len(queries["keys"]))
-	// fmt.Println(queries["order"])
-	// fmt.Println(len(queries["order"]))
+	fmt.Println(query)
+	// fmt.Println(query["where"])
+	// fmt.Println(len(query["where"]))
+	// fmt.Println(query["limit"])
+	// fmt.Println(len(query["limit"]))
+	// fmt.Println(query["skip"])
+	// fmt.Println(len(query["skip"]))
+	// fmt.Println(query["keys"])
+	// fmt.Println(len(query["keys"]))
+	// fmt.Println(query["order"])
+	// fmt.Println(len(query["order"]))
 
 	// var params map[string]interface{}
 
@@ -174,5 +175,24 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, error) {
 	// }
 
 	
-	return queries, nil
+	return query, nil
+}
+
+
+
+func formatObjectQuery(query bson.M) error {
+	// paramKeyMapping := map[string]string{"objectId": "_id", "updatedAt": "_updated_at", "createdAt": "_created_at"}
+	// for exposedParamKey, dbParamKey := range paramKeyMapping {
+	// 	// we do not allow querying using param key format that we use in database (prefixed with "_")
+	// 	delete(query, dbParamKey)
+
+	// 	if value, ok := query[exposedParamKey]; ok {
+	// 		query[dbParamKey] = value
+	// 		delete(query, exposedParamKey)
+	// 	}
+	// }
+
+	
+	return nil
+
 }

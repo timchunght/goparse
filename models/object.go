@@ -149,3 +149,4 @@ func RandomString(strlen int) string {
 	}
 	return string(result)
 }
+
