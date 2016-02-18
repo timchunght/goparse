@@ -98,7 +98,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					return
 				case bool:
 					fieldType := "boolean"
-					// if expectedFieldType and actual fieldType are the same, we will est the object map's value using the fieldName 
+					// if expectedFieldType and actual fieldType are the same, we will est the object map's value using the fieldName
 					// else return error
 					// same logic in bool, string, number, and array
 					if expectedFieldType == fieldType {
@@ -201,7 +201,6 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(object)
 
 		// if schemaUpdates is larger than 0, then we will update schema
-		// TODO: Implement Schema Update
 		if len(schemaUpdates) > 0 {
 			err := models.SchemaUpdate(schemaUpdates, className)
 			if err != nil {
@@ -262,7 +261,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 			return
 		}
-		
+
 	}
 
 	// we can only panic and return if the model fails to create
@@ -283,7 +282,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 	objectId := string(vars["objectId"])
 
 	if className == "" {
-	err := helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "missing class name"})
+		err := helpers.RenderJson(w, http.StatusBadRequest, map[string]string{"error": "missing class name"})
 		if err != nil {
 			panic(err)
 		}
@@ -406,7 +405,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 							helpers.RenderJson(w, http.StatusBadRequest, errHash)
 							return
 						}
-						
+
 					} else {
 						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, fmt.Sprintf("invalid type for key %s, expected %s, but got %s", fieldName, expectedFieldType, fieldType))
 						return
@@ -525,7 +524,7 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func ObjectQuery(w http.ResponseWriter, r *http.Request) {
-	
+
 	// check body first to see if queries are found
 	body, _ := ioutil.ReadAll(r.Body)
 	queries, err := parseBodyQueryParams(body)
@@ -596,7 +595,6 @@ func ObjectDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
 
 // this function handles the special fieldTypes: Object, GeoPoint, Date (Pointer and Relation to be considered)
 func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, fieldValue map[string]interface{}, fieldType string) map[string]interface{} {
@@ -674,7 +672,7 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 // "Longitude must be in [-180, 180): 213213.2" (code 111)
 // It also makes sure that the values are numbers (if they are not numbers, code 107)
 func parseGeoPoint(geoPoint map[string]interface{}) ([]interface{}, error) {
-	
+
 	values := make([]interface{}, 2, 2)
 	for _, key := range []string{"latitude", "longitude"} {
 		switch geoPoint[key].(type) {
@@ -682,17 +680,17 @@ func parseGeoPoint(geoPoint map[string]interface{}) ([]interface{}, error) {
 			return values, errors.New(fmt.Sprintf("Wrong format code 107: TODO: %v", geoPoint[key]))
 		case int, int32, int64, float32, float64:
 			value := geoPoint[key].(float64)
-			switch key{
+			switch key {
 			case "latitude":
 				if float64(value) <= float64(90) && float64(value) >= float64(-90) {
 					// we want the original item when storing the point
 					values[0] = geoPoint[key]
 				} else {
 					return values, errors.New(fmt.Sprintf("Latitude must be in [-90, 90]: %v", geoPoint[key]))
-				}	
+				}
 			case "longitude":
 				if float64(value) < float64(180) && float64(value) >= float64(-180) {
-				// we want the original item when storing the point
+					// we want the original item when storing the point
 					values[1] = geoPoint[key]
 				} else {
 					return values, errors.New(fmt.Sprintf("Longitude must be in [-180, 180): %v", geoPoint[key]))
@@ -754,4 +752,3 @@ func parseDate(date map[string]interface{}) (time.Time, error) {
 // 	}
 
 // }
-
