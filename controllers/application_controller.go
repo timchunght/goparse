@@ -108,3 +108,25 @@ func parseReqBodyParams(body []byte) (map[string]interface{}, error) {
 
 	return params, nil
 }
+
+func parseBodyQueryParams(body []byte) (bson.M, error) {
+	var params map[string]interface{}
+
+	err := json.Unmarshal(body, &params)
+	if err != nil {
+		return bson.M{}, err
+	}
+
+	for key, _ := range params {
+		switch key {
+		default:
+		case "where":
+		case "order":
+		case "limit":
+		case "skip":
+		case "keys":
+		case "include":
+		}
+	}
+	return bson.M{}, nil
+}

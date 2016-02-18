@@ -23,13 +23,13 @@ You can change the port to the one your prefer since the application reads from 
 
 ### Implemented:
 
-Create (Done, tests pending)
-Retrieve (Done, tests pending)
-Update (Done, tests pending)
-Delete (Done, tests pending)
+* Create (Done, tests pending)
+* Retrieve (Done, tests pending)
+* Update (Done, tests pending)
+* Delete (Done, tests pending)
+* Queries (Not implemented)
 
-Queries (Not implemented)
-
+> This project aims to be Parse compatible since Parse will be shutting down. Although it might not be as complete as the Node based Parse-server open sourced by Parse, this project should satisfy most of our daily needs for a datastore. The ultimate goal of the project is to be able to reuse the SDK open sourced by Parse so to make development much easier. As soon as the backend is ready, we will proceed to building out the frontend that Parse's dashboard. However, do expect the first version to be a bit more rudimentary.
 
 # Objects
 
