@@ -74,7 +74,7 @@ func QueryObject(query bson.M, className string) ([]map[string]interface{}, erro
 	// other object querying are to be implemented
 	c, session := connection.GetCollection(className)
 	defer session.Close()
-	var objects []map[string]interface{}
+	objects := []map[string]interface{}{}
 
 	err := c.Find(query).All(&objects)
 	if err != nil {
@@ -84,7 +84,8 @@ func QueryObject(query bson.M, className string) ([]map[string]interface{}, erro
 	// retrieve schema map first
 	schema, err := SchemaQuery(bson.M{"_id": className})
 	if err != nil {
-		return objects, err
+		fmt.Println("ENCOUNTERING ERROR")
+		return []map[string]interface{}{}, err
 	}
 
 	if len(objects) > 0 {
@@ -93,6 +94,8 @@ func QueryObject(query bson.M, className string) ([]map[string]interface{}, erro
 				
 		} 
 	
+	} else {
+		return objects, err
 	}
 
 	return objects, err

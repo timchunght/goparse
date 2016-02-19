@@ -539,10 +539,11 @@ func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	className := string(vars["className"])
 	objects, _ := models.QueryObject(queries, className)
+	results := map[string]interface{}{"results": objects}
 	// body, _ := ioutil.ReadAll(r.Body)
 	// fmt.Println(r)
 	// fmt.Println(string(body))
-	_ = helpers.RenderJson(w, http.StatusOK, objects)
+	_ = helpers.RenderJson(w, http.StatusOK, results)
 	return
 }
 
