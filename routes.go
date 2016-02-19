@@ -45,12 +45,12 @@ var routes = Routes{
 	// 	"/trivias/{id}",
 	// 	controllers.TriviaUpdate,
 	// },
-	// Route{
-	// 	"ObjectCreate",
-	// 	[]string{"POST"},
-	// 	"/classes/{className}/",
-	// 	controllers.ObjectCreate,
-	// },
+	Route{
+		"ObjectCreate",
+		[]string{"POST"},
+		"/classes/{className}/",
+		controllers.ObjectCreate,
+	},
 	Route{
 		"ObjectCreate",
 		[]string{"POST"},
