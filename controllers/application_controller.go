@@ -140,12 +140,13 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 	for key, value := range queryMap {
 		switch key {
 		default:
+			return bson.M{}, nil
 		case "where":
 			if len(value) == 1 {
 				
 				err := json.Unmarshal([]byte(value[0]), &query)
 				if err != nil {
-					return bson.M{}, map[string]interface{}{"code": helpers.INVALID_KEY_NAME, "error": err.Error()}
+					return bson.M{}, map[string]interface{}{"code": helpers.INVALID_JSON, "error": "invalid JSON"}
 				}
 
 			} 
