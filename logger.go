@@ -19,5 +19,6 @@ func Logger(inner http.Handler, name string) http.Handler {
 			name,
 			time.Since(start),
 		)
+		log.Println("========END OF REQUEST========")
 	})
 }

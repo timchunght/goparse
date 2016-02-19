@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"goparse/Godeps/_workspace/src/github.com/gorilla/mux"
 	"bytes"
+  "log"
 	"fmt"
 )
 
@@ -40,26 +41,28 @@ func NewRouter() *mux.Router {
 
 func allowMethodOverride(next http.Handler) (http.Handler) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    log.Println("========INCOMING REQUEST========")
     body, _ := ioutil.ReadAll(r.Body)
-    fmt.Println(string(body))
-    fmt.Println(r)
+    // output/log original body
+    log.Println(fmt.Sprintf("ORIGINAL BODY: %v", string(body)))
+    // output/log original request
+    log.Println(fmt.Sprintf("ORIGINAL REQUEST: %v", r))
     var params map[string]interface{}
-    // fmt.Println(string(body))
-		_ = json.Unmarshal(body, &params)
-    // fmt.Println(reflect.TypeOf(body))
-    if params["_method"] == "GET" {
-    	r.Method = "GET"   
+    err := json.Unmarshal(body, &params)
+    if err == nil {
+      if params["_method"] == "GET" {
+      	r.Method = "GET"   
+      }
+      delete(params, "_method")
+      delete(params, "_ApplicationId")
+      delete(params, "_ClientVersion")
+      delete(params, "_InstallationId")
+      delete(params, "_JavaScriptKey")
+      delete(params, "_SessionToken")
+      delete(params, "_MasterKey")
+      newBody, _ := json.Marshal(params)
+      r.Body = ioutil.NopCloser(bytes.NewReader(newBody))
     }
-    delete(params, "_method")
-    delete(params, "_ApplicationId")
-    delete(params, "_ClientVersion")
-    delete(params, "_InstallationId")
-    delete(params, "_JavaScriptKey")
-    delete(params, "_SessionToken")
-    delete(params, "_MasterKey")
-    newBody, _ := json.Marshal(params)
-    r.Body = ioutil.NopCloser(bytes.NewReader(newBody))
-    
    	next.ServeHTTP(w, r)
   })
 
