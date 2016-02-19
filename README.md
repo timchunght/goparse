@@ -28,6 +28,13 @@ You can change the port to the one your prefer since the application reads from 
 * Update (Done, tests pending)
 * Delete (Done, tests pending)
 * Queries (Not implemented)
+-------------------
+Queries via JS SDK in body:
+{"where":{"post":{"__type":"Pointer","className":"Post","objectId":"V3WHbkwbiV"}},"_method":"GET","_ApplicationId":"gnTLDY5u0d3v5w7EYnSQY3o6y0RiVtkpYA5sGYXt","_JavaScriptKey":"yjii6Lrv2pZ0PdMOC69LBvEbSuNG0MS8Omf4Qcy5","_ClientVersion":"js1.7.0","_InstallationId":"b95374d7-315e-0a89-0a73-f250013f05bc"}
+&{POST /classes/GameScore HTTP/1.1 1 1 map[Content-Length:[302] Accept:[*/*] Content-Type:[text/plain] X-Forwarded-For:[127.0.0.1] Accept-Encoding:[gzip] User-Agent:[node-XMLHttpRequest, Parse/js1.7.0 (NodeJS 4.1.1)]] 0xc820227b40 302 [] false localhost:5000 map[] map[] <nil> map[] [::1]:61753 /classes/GameScore <nil> <nil>}
+map[]
+
+--------------------
 
 > This project aims to be Parse compatible since Parse will be shutting down. Although it might not be as complete as the Node based Parse-server open sourced by Parse, this project should satisfy most of our daily needs for a datastore. The ultimate goal of the project is to be able to reuse the SDK open sourced by Parse so to make development much easier. As soon as the backend is ready, we will proceed to building out the frontend that Parse's dashboard. However, do expect the first version to be a bit more rudimentary.
 

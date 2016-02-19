@@ -84,8 +84,8 @@ func QueryObject(query bson.M, className string) ([]map[string]interface{}, erro
 	// retrieve schema map first
 	schema, err := SchemaQuery(bson.M{"_id": className})
 	if err != nil {
-		fmt.Println("ENCOUNTERING ERROR")
-		return []map[string]interface{}{}, err
+
+		return objects, err
 	}
 
 	if len(objects) > 0 {
