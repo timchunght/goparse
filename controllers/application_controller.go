@@ -8,6 +8,7 @@ import (
 	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"net/http"
 	"fmt"
+	"goparse/helpers"
 )
 
 func getQuery(paramKeys []string, r *http.Request) (bson.M, error) {
@@ -131,6 +132,7 @@ func parseBodyQueryParams(body []byte) (bson.M, error) {
 	return bson.M{}, nil
 }
 
+// convert the url-encoded query params into bson query object or return an errorMap if it errors out
 func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}) {
 	
 	queryMap, _ := url.ParseQuery(rawQuery)
@@ -143,7 +145,7 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 				
 				err := json.Unmarshal([]byte(value[0]), &query)
 				if err != nil {
-					return bson.M{}, map[string]interface{}{"code": 105, "error": err.Error()}
+					return bson.M{}, map[string]interface{}{"code": helpers.INVALID_KEY_NAME, "error": err.Error()}
 				}
 
 			} 
@@ -167,12 +169,6 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 	// fmt.Println(query["order"])
 	// fmt.Println(len(query["order"]))
 
-	// var params map[string]interface{}
-
-	// err := json.Unmarshal(body, &params)
-	// if err != nil {
-	// 	return bson.M{}, err
-	// }
 	errMap := formatObjectQuery(query)
 	return query, errMap
 }
@@ -182,19 +178,11 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 func formatObjectQuery(query bson.M) map[string]interface{} {
 	
 
+	// make sure that the keys of the query keys are valid
 	for exposedParamKey, _ := range query {
 		if(!fieldNameIsValid(exposedParamKey)) {
-			return map[string]interface{}{"code": 001, "error": fmt.Sprintf("invalid field name: %s", exposedParamKey)}
+			return map[string]interface{}{"code": helpers.INVALID_KEY_NAME, "error": fmt.Sprintf("invalid field name: %s", exposedParamKey)}
 		}
-
-		// switch exposedParamKey {
-		// case "objectId":
-		// 	query["_id"] = value
-		// 	delete(query, "objectId")
-		// case "createdAt":
-
-		// case "updatedAt":
-		// }
 	}
 
 	paramKeyMapping := map[string]string{"objectId": "_id", "updatedAt": "_updated_at", "createdAt": "_created_at"}
