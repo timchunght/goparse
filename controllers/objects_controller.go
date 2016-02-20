@@ -70,6 +70,16 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// TODOs:
+	// Implement the built in classes
+	if classNameIsBuiltIn(className) {
+		switch className {
+		case "_User":
+
+		case "_Installation":
+		}
+	}
+
 	// LEGAL TYPES:
 	// Boolean
 	// String
@@ -131,7 +141,6 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 						helpers.RenderJsonErr(w, http.StatusBadRequest, helpers.INCORRECT_TYPE, err.Error())
 						return
 					}
-
 
 					// if the fieldType is a legalType but does not match the type in the schema, return error
 					if expectedFieldType == fieldType {
@@ -586,19 +595,18 @@ func ObjectDestroy(w http.ResponseWriter, r *http.Request) {
 
 // this function handles the special fieldTypes: Object, GeoPoint, Date (Pointer and Relation to be considered)
 func setSpecialFieldTypesField(object map[string]interface{}, fieldName string, fieldValue map[string]interface{}, fieldType string) map[string]interface{} {
-	
-	
+
 	// fmt.Println()
 	switch fieldType {
 	default:
-		if(fieldValue["__type"] == "Pointer") {
+		if fieldValue["__type"] == "Pointer" {
 			// TODO: implement a regex that works for both scenario * and *and-anything
 			pointerTypeRegex, _ := regexp.Compile(`(\*)(.+)`)
-			if(pointerTypeRegex.Match([]byte(fieldType)) || fieldType == "*") {
-				
+			if pointerTypeRegex.Match([]byte(fieldType)) || fieldType == "*" {
+
 				// check cases where the className and objectId are blank
 				// sample data from db: "_p_Group" : "FoodGroup$wZEQFvaBvo"
-				object["_p_" + fieldName] = fieldValue["className"].(string) + "$" + fieldValue["objectId"].(string)
+				object["_p_"+fieldName] = fieldValue["className"].(string) + "$" + fieldValue["objectId"].(string)
 				delete(object, fieldName)
 			}
 		} else {
@@ -620,13 +628,19 @@ func setSpecialFieldTypesField(object map[string]interface{}, fieldName string, 
 	case "relation":
 	}
 
-
-
 	return nil
 }
 
 // This function makes sure that the className is valid for all ReadWrite requests
 func classNameIsValid(className string) bool {
+	//Class names have the same constraints as field names, but also allow the built in names.
+	return classNameIsBuiltIn(className) || fieldNameIsValid(className)
+	// TODO: Implement joinClassRegex
+	// || joinClassRegex.test(className)
+
+}
+
+func classNameIsBuiltIn(className string) bool {
 	//Class names have the same constraints as field names, but also allow the previous additional names.
 	return className == "_User" || className == "_Installation" || className == "_Session" || className == "_Role" || fieldNameIsValid(className)
 	// TODO: Implement joinClassRegex
@@ -691,10 +705,10 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 					// Change returns to string and map[string]interface{} with code 106
 					return "", errors.New(fmt.Sprintf("%v is not a valid Pointer", fieldValue))
 				}
-				
+
 			} else {
 				// TODOs:
-				// Change returns to string and map[string]interface{} with code 106	
+				// Change returns to string and map[string]interface{} with code 106
 				return "", errors.New(fmt.Sprintf("%v is not a valid Pointer", fieldValue))
 			}
 		}
