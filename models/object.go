@@ -8,6 +8,8 @@ import (
 	"time"
 	"math/rand"
 	"fmt"
+	"strings"
+	"regexp"
 )
 
 func ObjectCreate(object map[string]interface{}, className string) error {
@@ -111,9 +113,21 @@ func parseObject(object, schema map[string]interface{}) error {
 	delete(object, "_updated_at")
 	
 	for key, value := range object {
+
+		
 		switch schema[key] {
 		default:
 			// do nothing
+			pointerKeyRegex, _ := regexp.Compile(`^(_p_)(.+)`)
+			if pointerKeyRegex.Match([]byte(key)) {
+				key = strings.TrimPrefix(key, "_p_")
+			
+				if(strings.HasPrefix(schema[key].(string), "*") || strings.Split("$", value.(string))[0] != "") {
+					object[key] = map[string]interface{}{"__type": "Pointer", "className": value}
+				} else {
+					object[key] = nil
+				}
+			}
 		case "date":
 			if object[key] != nil {
 				object[key] = map[string]interface{}{"__type": "Date", "iso": value}
