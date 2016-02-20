@@ -132,6 +132,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
+
 					// if the fieldType is a legalType but does not match the type in the schema, return error
 					if expectedFieldType == fieldType {
 						// this function sets the various special fieldType fields in the object
@@ -464,7 +465,6 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 
 		}
 		// if schemaUpdates is larger than 0, then we will update schema
-		// TODO: Implement Schema Update
 		if len(schemaUpdates) > 0 {
 			err := models.SchemaUpdate(schemaUpdates, className)
 			if err != nil {
@@ -534,7 +534,6 @@ func ObjectQuery(w http.ResponseWriter, r *http.Request) {
 		// print some errors here
 		return
 	}
-	
 
 	vars := mux.Vars(r)
 	className := string(vars["className"])
@@ -602,6 +601,14 @@ func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, 
 			return map[string]interface{}{"code": helpers.INCORRECT_TYPE, "error": err.Error()}
 		}
 		object[fieldName] = dateObject
+	case "file":
+	case "pointer":
+		// TODOs:
+		// also use regex to represent fieldType that starts with *
+		// check cases where the className and objectId are blank
+		// sample data from db: "_p_Group" : "FoodGroup$wZEQFvaBvo"
+		object["_p_" + fieldName] = object[fieldName].(map[string]interface{})["className"].(string) + "$" + object[fieldName].(map[string]interface{})["objectId"].(string)
+	case "relation":
 	}
 	return nil
 }
@@ -623,6 +630,11 @@ func fieldNameIsValid(fieldName string) bool {
 }
 
 // This function returns the field type when the request contains a map
+// it also passes the JSON object to make sure required certain required params exist
+// specific param passing will be done in setSpecialFieldTypeFields()
+// Returned type is a lowercase string
+// TODOs:
+// implement File, Pointer, Relation type
 func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 
 	if fieldType, ok := fieldValue["__type"]; ok {
@@ -649,6 +661,29 @@ func getFieldTypeFromMap(fieldValue map[string]interface{}) (string, error) {
 				}
 			} else {
 				return "", errors.New("Invalid format for latitude")
+			}
+		case "File":
+		case "Pointer":
+			if _, ok := fieldValue["objectId"]; ok {
+				if _, ok := fieldValue["className"]; ok {
+
+					// it seems that official API does not check className for pointers
+					// strange...
+					// if !classNameIsValid(className) {
+					// 	return errors.New(fmt.Sprintf("", className))
+					// }
+
+					return "*" + fieldValue["className"].(string), nil
+				} else {
+					// TODOs:
+					// Change returns to string and map[string]interface{} with code 106
+					return "", errors.New(fmt.Sprintf("%v is not a valid Pointer", fieldValue))
+				}
+				
+			} else {
+				// TODOs:
+				// Change returns to string and map[string]interface{} with code 106	
+				return "", errors.New(fmt.Sprintf("%v is not a valid Pointer", fieldValue))
 			}
 		}
 	}
