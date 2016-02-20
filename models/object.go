@@ -122,7 +122,7 @@ func parseObject(object, schema map[string]interface{}) error {
 			if pointerKeyRegex.Match([]byte(key)) {
 				key = strings.TrimPrefix(key, "_p_")
 			
-				if(strings.HasPrefix(schema[key].(string), "*") || strings.Split("$", value.(string))[0] != "") {
+				if(strings.HasPrefix(schema[key].(string), "*") && strings.Split(value.(string), "$")[0] != "") {
 					object[key] = map[string]interface{}{"__type": "Pointer", "className": value}
 				} else {
 					object[key] = nil
