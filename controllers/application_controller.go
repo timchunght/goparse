@@ -136,7 +136,7 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 		}
 	}
 
-	fmt.Println(query)
+	// fmt.Println(query)
 	// fmt.Println(query["where"])
 	// fmt.Println(len(query["where"]))
 	// fmt.Println(query["limit"])
@@ -180,7 +180,7 @@ func parseBodyQueryParams(body []byte) (bson.M, map[string]interface{}) {
 			}
 		}
 
-		fmt.Println(query)
+		// fmt.Println(query)
 		// fmt.Println(query["where"])
 		// fmt.Println(len(query["where"]))
 		// fmt.Println(query["limit"])
