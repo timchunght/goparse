@@ -110,28 +110,6 @@ func parseReqBodyParams(body []byte) (map[string]interface{}, error) {
 	return params, nil
 }
 
-func parseBodyQueryParams(body []byte) (bson.M, error) {
-	var params map[string]interface{}
-
-	err := json.Unmarshal(body, &params)
-	if err != nil {
-		return bson.M{}, err
-	}
-
-	for key, _ := range params {
-		switch key {
-		default:
-		case "where":
-		case "order":
-		case "limit":
-		case "skip":
-		case "keys":
-		case "include":
-		}
-	}
-	return bson.M{}, nil
-}
-
 // convert the url-encoded query params into bson query object or return an errorMap if it errors out
 func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}) {
 	
@@ -174,7 +152,51 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 	return query, errMap
 }
 
+// convert the url-encoded query params into bson query object or return an errorMap if it errors out
+func parseBodyQueryParams(body []byte) (bson.M, map[string]interface{}) {
+	// return an empty bson hash map if the body is empty
+	if string(body) == "" {
+		
+		return bson.M{}, nil
+	} else {
+		var queryMap map[string]interface{}
 
+		err := json.Unmarshal(body, &queryMap)
+		if err != nil {
+			return bson.M{}, map[string]interface{}{"code": helpers.INVALID_JSON, "error": "invalid JSON"}
+		}
+		var query bson.M
+		for key, value := range queryMap {
+			switch key {
+			default:
+				return bson.M{}, nil
+			case "where":
+				query = value.(bson.M)
+			case "order":
+			case "limit":
+			case "skip":
+			case "keys":
+			case "include":
+			}
+		}
+
+		fmt.Println(query)
+		// fmt.Println(query["where"])
+		// fmt.Println(len(query["where"]))
+		// fmt.Println(query["limit"])
+		// fmt.Println(len(query["limit"]))
+		// fmt.Println(query["skip"])
+		// fmt.Println(len(query["skip"]))
+		// fmt.Println(query["keys"])
+		// fmt.Println(len(query["keys"]))
+		// fmt.Println(query["order"])
+		// fmt.Println(len(query["order"]))
+
+		errMap := formatObjectQuery(query)
+		return query, errMap
+	}
+	
+}
 
 func formatObjectQuery(query bson.M) map[string]interface{} {
 	

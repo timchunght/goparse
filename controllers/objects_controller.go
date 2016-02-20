@@ -533,20 +533,25 @@ func ObjectShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func ObjectQuery(w http.ResponseWriter, r *http.Request) {
-	queries, errMap := parseUrlEncodedQueryParams(r.URL.RawQuery)
-	// check body first to see if queries are found
-	// body, _ := ioutil.ReadAll(r.Body)
-	// queries, err := parseBodyQueryParams(body)
-	// fmt.Println(queries)
+	
+	query := bson.M{}
+	// check body first to see if query are found
+	body, _ := ioutil.ReadAll(r.Body)
+	query, errMap := parseBodyQueryParams(body)
+	// fmt.Println(query)
 	if errMap != nil {
 		helpers.RenderJson(w, http.StatusBadRequest, errMap)
 		// print some errors here
 		return
 	}
 
+	if string(body) == "" {
+		// if body is empty, we will parse the UrlEncodedQuery
+		query, _ = parseUrlEncodedQueryParams(r.URL.RawQuery)
+	}
 	vars := mux.Vars(r)
 	className := string(vars["className"])
-	objects, _ := models.QueryObject(queries, className)
+	objects, _ := models.QueryObject(query, className)
 	results := map[string]interface{}{"results": objects}
 	// body, _ := ioutil.ReadAll(r.Body)
 	// fmt.Println(r)
