@@ -123,7 +123,7 @@ func parseObject(object, schema map[string]interface{}) error {
 				key = strings.TrimPrefix(key, "_p_")
 			
 				if(strings.HasPrefix(schema[key].(string), "*") && strings.Split(value.(string), "$")[0] != "") {
-					object[key] = map[string]interface{}{"__type": "Pointer", "className": value}
+					object[key] = map[string]interface{}{"__type": "Pointer", "className": strings.Split(schema[key].(string), "*")[1], "objectId": strings.Split(value.(string), "$")[1]}
 				} else {
 					object[key] = nil
 				}
