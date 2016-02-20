@@ -137,7 +137,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					if expectedFieldType == fieldType {
 						// this function sets the various special fieldType fields in the object
 						// types: Object, Date, GeoPoint
-						errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+						errMap := setSpecialFieldTypesField(object, fieldName, v, fieldType)
 						if errMap != nil {
 							helpers.RenderJson(w, http.StatusBadRequest, errMap)
 							return
@@ -183,7 +183,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 					}
 					// this function sets the various special fieldType fields in the object
 					// types: Object, Date, GeoPoint
-					errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+					errMap := setSpecialFieldTypesField(object, fieldName, v, fieldType)
 					if errMap != nil {
 						helpers.RenderJson(w, http.StatusBadRequest, errMap)
 						return
@@ -239,7 +239,7 @@ func ObjectCreate(w http.ResponseWriter, r *http.Request) {
 				}
 				// this function sets the various special fieldType fields in the object
 				// types: Object, Date, GeoPoint
-				errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+				errMap := setSpecialFieldTypesField(object, fieldName, v, fieldType)
 				if errMap != nil {
 					helpers.RenderJson(w, http.StatusBadRequest, errMap)
 					return
@@ -401,7 +401,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 					if expectedFieldType == fieldType {
 						// this function sets the various special fieldType fields in the object
 						// types: Object, Date, GeoPoint
-						errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+						errMap := setSpecialFieldTypesField(object, fieldName, v, fieldType)
 						if errMap != nil {
 							helpers.RenderJson(w, http.StatusBadRequest, errMap)
 							return
@@ -449,7 +449,7 @@ func ObjectUpdate(w http.ResponseWriter, r *http.Request) {
 					// key checking sequence "__type", "__op"
 					// this function sets the various special fieldType fields in the object
 					// types: Object, Date, GeoPoint
-					errMap := setSpecialFieldTypeFields(object, fieldName, v, fieldType)
+					errMap := setSpecialFieldTypesField(object, fieldName, v, fieldType)
 					if errMap != nil {
 						helpers.RenderJson(w, http.StatusBadRequest, errMap)
 						return
@@ -585,10 +585,25 @@ func ObjectDestroy(w http.ResponseWriter, r *http.Request) {
 }
 
 // this function handles the special fieldTypes: Object, GeoPoint, Date (Pointer and Relation to be considered)
-func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, fieldValue map[string]interface{}, fieldType string) map[string]interface{} {
+func setSpecialFieldTypesField(object map[string]interface{}, fieldName string, fieldValue map[string]interface{}, fieldType string) map[string]interface{} {
+	
+	
+	// fmt.Println()
 	switch fieldType {
 	default:
-		object[fieldName] = fieldValue
+		if(fieldValue["__type"] == "Pointer") {
+			// TODO: implement a regex that works for both scenario * and *and-anything
+			pointerTypeRegex, _ := regexp.Compile(`(\*)(.+)`)
+			if(pointerTypeRegex.Match([]byte(fieldType)) || fieldType == "*") {
+				
+				// check cases where the className and objectId are blank
+				// sample data from db: "_p_Group" : "FoodGroup$wZEQFvaBvo"
+				object["_p_" + fieldName] = fieldValue["className"].(string) + "$" + fieldValue["objectId"].(string)
+				delete(object, fieldName)
+			}
+		} else {
+			object[fieldName] = fieldValue
+		}
 	case "geopoint":
 		geoPoint, err := parseGeoPoint(fieldValue)
 		object[fieldName] = geoPoint
@@ -602,14 +617,11 @@ func setSpecialFieldTypeFields(object map[string]interface{}, fieldName string, 
 		}
 		object[fieldName] = dateObject
 	case "file":
-	case "pointer":
-		// TODOs:
-		// also use regex to represent fieldType that starts with *
-		// check cases where the className and objectId are blank
-		// sample data from db: "_p_Group" : "FoodGroup$wZEQFvaBvo"
-		object["_p_" + fieldName] = object[fieldName].(map[string]interface{})["className"].(string) + "$" + object[fieldName].(map[string]interface{})["objectId"].(string)
 	case "relation":
 	}
+
+
+
 	return nil
 }
 
@@ -631,7 +643,7 @@ func fieldNameIsValid(fieldName string) bool {
 
 // This function returns the field type when the request contains a map
 // it also passes the JSON object to make sure required certain required params exist
-// specific param passing will be done in setSpecialFieldTypeFields()
+// specific param passing will be done in setSpecialFieldTypesField()
 // Returned type is a lowercase string
 // TODOs:
 // implement File, Pointer, Relation type
