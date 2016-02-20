@@ -120,13 +120,16 @@ func parseObject(object, schema map[string]interface{}) error {
 			// do nothing
 			pointerKeyRegex, _ := regexp.Compile(`^(_p_)(.+)`)
 			if pointerKeyRegex.Match([]byte(key)) {
+				delete(object, key)
 				key = strings.TrimPrefix(key, "_p_")
-			
+				
 				if(strings.HasPrefix(schema[key].(string), "*") && strings.Split(value.(string), "$")[0] != "") {
 					object[key] = map[string]interface{}{"__type": "Pointer", "className": strings.Split(schema[key].(string), "*")[1], "objectId": strings.Split(value.(string), "$")[1]}
 				} else {
 					object[key] = nil
 				}
+
+
 			}
 		case "date":
 			if object[key] != nil {
