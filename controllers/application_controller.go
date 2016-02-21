@@ -6,81 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"goparse/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
-	"net/http"
+	// "net/http"
 	"fmt"
 	"goparse/helpers"
 )
-
-func getQuery(paramKeys []string, r *http.Request) (bson.M, error) {
-
-	query := bson.M{}
-	// fmt.Println(r.URL.Query())
-	for _, paramKey := range paramKeys {
-
-		if value, ok := r.URL.Query()[paramKey]; ok {
-			if value[0] == "" {
-				// return error if the value is blank
-				return query, errors.New("Missing required query parameter")
-			} else {
-
-				query[paramKey] = value[0]
-			}
-
-		} else {
-			// return false if the key does not exist
-			return query, errors.New("Missing required query parameter")
-		}
-	}
-
-	return query, nil
-
-}
-
-func getUpdateDocFromBody(body []byte, requiredParamKeys, paramKeys []string) (bson.M, error) {
-	var params map[string]interface{}
-	err := json.Unmarshal(body, &params)
-	doc := bson.M{}
-	updates := bson.M{}
-	if err != nil {
-		// fmt.Println(err)
-		return doc, err
-	}
-
-	// if required param key is present but has blank value, return error
-	for _, paramKey := range requiredParamKeys {
-		if value, ok := params[paramKey]; ok {
-
-			switch v := value.(type) {
-			default:
-				updates[paramKey] = v
-			case string:
-				if v == "" {
-					// return false if the value is blank
-					return doc, errors.New("Required params can't be blank")
-				} else {
-					updates[paramKey] = v
-				}
-			case []string:
-				if len(v) == 0 {
-					return doc, errors.New("Required params can't be blank")
-				} else {
-					updates[paramKey] = v
-				}
-			}
-
-		}
-	}
-
-	//if all required params are checked, create update doc using the values
-	for _, paramKey := range paramKeys {
-		if value, ok := params[paramKey]; ok {
-			updates[paramKey] = value
-		}
-	}
-
-	doc["$set"] = updates
-	return doc, err
-}
 
 // this function makes sure that all the params are present and their values not blank
 func parseReqBodyParams(body []byte) (map[string]interface{}, error) {
@@ -147,8 +76,9 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 	// fmt.Println(len(query["keys"]))
 	// fmt.Println(query["order"])
 	// fmt.Println(len(query["order"]))
-
+	_ = parseWhereQuery(query)
 	errMap := formatObjectQuery(query)
+	fmt.Println(query)
 	return query, errMap
 }
 
@@ -179,23 +109,57 @@ func parseBodyQueryParams(body []byte) (bson.M, map[string]interface{}) {
 			case "include":
 			}
 		}
-
-		// fmt.Println(query)
-		// fmt.Println(query["where"])
-		// fmt.Println(len(query["where"]))
-		// fmt.Println(query["limit"])
-		// fmt.Println(len(query["limit"]))
-		// fmt.Println(query["skip"])
-		// fmt.Println(len(query["skip"]))
-		// fmt.Println(query["keys"])
-		// fmt.Println(len(query["keys"]))
-		// fmt.Println(query["order"])
-		// fmt.Println(len(query["order"]))
-
+		parseWhereQuery(query)
 		errMap := formatObjectQuery(query)
+		
 		return query, errMap
 	}
 	
+}
+
+func parseWhereQuery(query map[string]interface{}) map[string]interface{} {
+
+	// check each key to see if it is valid
+	// if the first level value of a key is a map and the keys are not part an action key "$action"
+	// do inner value checking
+	// fmt.Println("INSIDE parseWhereQuery")
+	for fieldName, value := range query {
+		if fieldNameIsValid(fieldName) {
+			switch value.(type) {
+			default:
+			case map[string]interface{}:
+				// fmt.Println("MAP QUERY")
+				for innerFieldName, innerValue := range value.(map[string]interface{}) {
+					if isMongoQueryActionKey(innerFieldName) {
+						switch innerValue.(type) {
+						case map[string]interface{}:
+							if innerValue.(map[string]interface{})["__type"] == "Date" {
+								innerValue, _ = parseDate(innerValue.(map[string]interface{}))
+							}
+						}
+					} else {
+						// if innerFieldName is not an action and the innerValue 
+						if _, ok := value.(map[string]interface{})["__type"]; ok {
+							if value.(map[string]interface{})["__type"] == "Date" {
+								dateObject, _ := parseDate(value.(map[string]interface{}))
+
+								query[fieldName] = dateObject
+							}
+						}
+
+						break
+					}
+					// fmt.Println(innerFieldName)
+					// fmt.Println(innerValue)
+				}
+			}
+
+		} else {
+			return map[string]interface{}{"code": helpers.INVALID_QUERY, "error": fmt.Sprintf("Invalid key %s for find", fieldName)}
+		}
+	}
+	fmt.Println(query)
+	return nil
 }
 
 func formatObjectQuery(query bson.M) map[string]interface{} {
@@ -218,4 +182,28 @@ func formatObjectQuery(query bson.M) map[string]interface{} {
 	}
 	return nil
 
+}
+
+func isMongoQueryActionKey(action string) bool {
+	// Key	Operation
+	// --------------
+	// $lt	Less Than
+	// $lte	Less Than Or Equal To
+	// $gt	Greater Than
+	// $gte	Greater Than Or Equal To
+	// $ne	Not Equal To
+	// $in	Contained In
+	// $nin	Not Contained in
+	// $exists	A value is set for the key
+	// $select	This matches a value for a key in the result of a different query
+	// $dontSelect	Requires that a key's value not match a value for a key in the result of a different query
+	// $all	Contains all of the given values
+	// $regex	Requires that a key's value match a regular expression
+	actions := []string{"$lt", "$lte", "$gt", "$gte", "$ne", "$in", "$nin", "$exists", "$select", "$dontSelect", "$all", "$regex"}
+	for _, value := range actions {
+		if action == value {
+			return true
+		}
+	}
+	return false
 }
