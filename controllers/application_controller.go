@@ -43,7 +43,7 @@ func parseReqBodyParams(body []byte) (map[string]interface{}, error) {
 func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}) {
 	
 	queryMap, _ := url.ParseQuery(rawQuery)
-	var query bson.M
+	var query map[string]interface{}
 	for key, value := range queryMap {
 		switch key {
 		default:
@@ -64,8 +64,10 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 		case "include":
 		}
 	}
+	// fmt.Println(findObjectWithKey(query, "$select"))
 	_ = parseWhereQuery(query)
 	errMap := formatObjectQuery(query)
+	// map can be used as bson.M for return
 	return query, errMap
 }
 
@@ -82,7 +84,7 @@ func parseBodyQueryParams(body []byte) (bson.M, map[string]interface{}) {
 		if err != nil {
 			return bson.M{}, map[string]interface{}{"code": helpers.INVALID_JSON, "error": "invalid JSON"}
 		}
-		var query bson.M
+		var query map[string]interface{}
 		for key, value := range queryMap {
 			switch key {
 			default:
@@ -96,6 +98,9 @@ func parseBodyQueryParams(body []byte) (bson.M, map[string]interface{}) {
 			case "include":
 			}
 		}
+
+		// findObjectWithKey(query, "$select").(map[string]interface{})["helloworld"] = "helloworld"
+		// fmt.Println(query)
 		parseWhereQuery(query)
 		errMap := formatObjectQuery(query)
 		
@@ -194,4 +199,42 @@ func isMongoQueryActionKey(action string) bool {
 		}
 	}
 	return false
+}
+
+
+
+// Finds a subobject that has the given key, if there is one.
+// Returns nil otherwise.
+// this only accepts 
+func findObjectWithKey(root interface{}, key string) interface{} {
+  // if (typeof root !== 'object') {
+  //   return;
+  // }
+
+  switch root.(type) {
+  default:
+  	return nil
+  case []interface{}:
+  	for _, item := range root.([]interface{}) {
+  		answer := findObjectWithKey(item, key)
+  		if answer != nil {
+  			return answer
+  		}
+  	}
+  case map[string]interface{}:
+  }
+  
+  if _, ok := root.(map[string]interface{})[key]; ok {
+		
+		return root
+	}
+
+	for subkey, _ := range root.(map[string]interface{}) {
+		answer := findObjectWithKey(root.(map[string]interface{})[subkey], key)
+		if answer != nil {
+			return answer
+		}
+	}
+  
+  return nil
 }
