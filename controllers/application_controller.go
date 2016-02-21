@@ -64,21 +64,8 @@ func parseUrlEncodedQueryParams(rawQuery string) (bson.M, map[string]interface{}
 		case "include":
 		}
 	}
-
-	// fmt.Println(query)
-	// fmt.Println(query["where"])
-	// fmt.Println(len(query["where"]))
-	// fmt.Println(query["limit"])
-	// fmt.Println(len(query["limit"]))
-	// fmt.Println(query["skip"])
-	// fmt.Println(len(query["skip"]))
-	// fmt.Println(query["keys"])
-	// fmt.Println(len(query["keys"]))
-	// fmt.Println(query["order"])
-	// fmt.Println(len(query["order"]))
 	_ = parseWhereQuery(query)
 	errMap := formatObjectQuery(query)
-	fmt.Println(query)
 	return query, errMap
 }
 
@@ -101,7 +88,7 @@ func parseBodyQueryParams(body []byte) (bson.M, map[string]interface{}) {
 			default:
 				return bson.M{}, nil
 			case "where":
-				query = value.(bson.M)
+				query = value.(map[string]interface{})
 			case "order":
 			case "limit":
 			case "skip":
@@ -138,7 +125,7 @@ func parseWhereQuery(query map[string]interface{}) map[string]interface{} {
 							}
 						}
 					} else {
-						// if innerFieldName is not an action and the innerValue 
+						// if innerFieldName is not an action and the value has field __type
 						if _, ok := value.(map[string]interface{})["__type"]; ok {
 							if value.(map[string]interface{})["__type"] == "Date" {
 								dateObject, _ := parseDate(value.(map[string]interface{}))
@@ -158,7 +145,6 @@ func parseWhereQuery(query map[string]interface{}) map[string]interface{} {
 			return map[string]interface{}{"code": helpers.INVALID_QUERY, "error": fmt.Sprintf("Invalid key %s for find", fieldName)}
 		}
 	}
-	fmt.Println(query)
 	return nil
 }
 
