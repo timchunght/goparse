@@ -126,13 +126,13 @@ func parseWhereQuery(query map[string]interface{}) map[string]interface{} {
 						}
 					} else {
 						// if innerFieldName is not an action and the value has field __type
-						if _, ok := value.(map[string]interface{})["__type"]; ok {
-							if value.(map[string]interface{})["__type"] == "Date" {
-								dateObject, _ := parseDate(value.(map[string]interface{}))
-
-								query[fieldName] = dateObject
-							}
+						// if _, ok := value.(map[string]interface{})["__type"]; ok {
+						switch value.(map[string]interface{})["__type"] {
+						case "Date":
+							dateObject, _ := parseDate(value.(map[string]interface{}))
+							query[fieldName] = dateObject
 						}
+						// }
 
 						break
 					}
@@ -145,6 +145,8 @@ func parseWhereQuery(query map[string]interface{}) map[string]interface{} {
 			return map[string]interface{}{"code": helpers.INVALID_QUERY, "error": fmt.Sprintf("Invalid key %s for find", fieldName)}
 		}
 	}
+
+	fmt.Println(query)
 	return nil
 }
 
