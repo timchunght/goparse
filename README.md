@@ -18,6 +18,6 @@ To make sure that it is working, try:
 	curl -X POST \
 	-H "Content-Type: application/json" \
 	-d '{"score":1337,"playerName":"Sean Plott","cheatMode":false}' \
-	https://localhost:8080/classes/GameScore
+	http://localhost:8080/classes/GameScore
 
 That's it!
